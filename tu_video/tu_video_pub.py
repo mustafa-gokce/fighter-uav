@@ -1,23 +1,49 @@
 import time
-import numpy
 import zmq
+import cv2
+import tu_settings
 
 
-def send_array_and_str(socket, img, string, flags=0):
+# publish video stream to endpoints
+def tu_video_pub(socket, img, data, flags=0):
     md = dict(dtype=str(img.dtype), shape=img.shape)
-
-    socket.send_string(string, flags | zmq.SNDMORE)
+    socket.send_json(data, flags | zmq.SNDMORE)
     socket.send_json(md, flags | zmq.SNDMORE)
     return socket.send(img, flags)
 
 
-context = zmq.Context()
-socket = context.socket(zmq.PUB)
-socket.bind("tcp://*:5667")
+# open capture device
+capture_device = cv2.VideoCapture(0)
 
-my_ndarray = numpy.array([1, 2, 3])
-my_string = "Hello World"
+# create socket
+pub_context = zmq.Context()
+pub_socket = pub_context.socket(zmq.PUB)
+pub_socket.bind("tcp://*:" + str(tu_settings.tu_video_stream_port))
 
+# delay first because of the socket bindings
+time.sleep(tu_settings.tu_video_stream_initial_delay)
+
+# streaming loop
+loop_count = 0
 while True:
-    time.sleep(1)
-    send_array_and_str(socket, my_ndarray, my_string)
+    # print counter for debugging
+    print("seq:", loop_count)
+
+    # capture the frame
+    ret, image_frame = capture_device.read()
+
+    # publish video stream to endpoints
+    tu_video_pub(pub_socket, image_frame, {"loop_count": loop_count})
+
+    # update counter
+    loop_count += 1
+
+    # break the loop if requested
+    if cv2.waitKey(1) & 0xFF == ord("q"):
+        break
+
+    # fps limiter to prevent burst data
+    time.sleep(1.0 / tu_settings.tu_video_stream_fps_max)
+
+# release capture device
+capture_device.release()
