@@ -1,3 +1,6 @@
 # fighter-uav
+this repository contains 
 ## installations
-python3 -m pip install numpy pyzmq
+`sudo apt-get install nano net-tools screen`
+
+`python3 -m pip install numpy pyzmq pymavlink mavproxy`
