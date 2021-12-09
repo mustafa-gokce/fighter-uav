@@ -4,11 +4,10 @@ import logging
 import socketserver
 import threading
 import http.server
-
-# define streaming output object
 import tu_settings
 
 
+# define streaming output object
 class StreamingOutput(object):
 
     # initiate streaming output
@@ -98,7 +97,9 @@ while True:
     try:
 
         # initiate camera object with context manager
-        with picamera.PiCamera(resolution="1280x720", framerate=41) as capture_device:
+        with picamera.PiCamera(resolution="{0}x{1}".format(tu_settings.tu_video_stream_width,
+                                                           tu_settings.tu_video_stream_height),
+                               framerate=tu_settings.tu_video_stream_fps) as capture_device:
 
             # initiate output object
             output = StreamingOutput()
