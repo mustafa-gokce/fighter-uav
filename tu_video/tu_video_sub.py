@@ -22,7 +22,8 @@ def tu_video_show():
     global my_image, received_stream
 
     # open video capture
-    video_capture = cv2.VideoCapture("../tu_asset/video/tu_video_2.mp4")
+
+    video_capture = cv2.VideoCapture("../tu_asset/video/tu_video_0.mp4")
 
     # initialize frame counter
     frame_counter = 0
@@ -94,7 +95,7 @@ while True:
         received_stream = True
 
     # error getting contents
-    except zmq.error.Again:
+    except Exception as e:
 
         # clear data
         my_data = {}
