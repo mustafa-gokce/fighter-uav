@@ -1,4 +1,5 @@
 import tu_interop_compat
+import tu_settings
 
 
 class Time:
@@ -191,31 +192,83 @@ class Target:
         return str(self.__dict__())
 
 
-class Judge:
-    def __init__(self):
-        self.time = Time()
+class Credential:
+    def __init__(self, user_name="", user_password=""):
+        self.__user_name = user_name
+        self.__user_password = user_password
+
+    @property
+    def user_name(self):
+        return self.__user_name
+
+    @property
+    def user_password(self):
+        return self.__user_password
+
+    @user_name.setter
+    def user_name(self, user_name: str):
+        self.__user_name = user_name
+
+    @user_password.setter
+    def user_password(self, user_password: str):
+        self.__user_password = user_password
 
     def __dict__(self):
-        return {"time": self.time.__dict__()}
+        return {"user_name": self.user_name,
+                "user_password": self.user_password}
 
     def __str__(self):
         return str(self.__dict__())
 
 
-class Vehicle:
+class BaseVehicle:
     def __init__(self, team: int):
         self.time = Time()
         self.location = Location()
         self.attitude = Attitude()
-        self.target = Target()
         self.__team = team
-        self.__speed = 0.0
-        self.__battery = 0.0
-        self.__auto = 0
 
     @property
     def team(self):
         return self.__team
+
+    @team.setter
+    def team(self, team: int):
+        self.__team = team
+
+    def __dict__(self):
+        return {"time": self.time.__dict__(),
+                "location": self.location.__dict__(),
+                "attitude": self.attitude.__dict__(),
+                "team": self.team}
+
+    def __str__(self):
+        return str(self.__dict__())
+
+
+class Foe(BaseVehicle):
+    def __init__(self, team: int):
+        super().__init__(team)
+
+    def __dict__(self):
+        return {"time": self.time.__dict__(),
+                "location": self.location.__dict__(),
+                "attitude": self.attitude.__dict__(),
+                "team": self.team}
+
+    def __str__(self):
+        return str(self.__dict__())
+
+
+class Vehicle(BaseVehicle):
+    def __init__(self, team: int):
+        super().__init__(team)
+        self.target = Target()
+        self.credential = Credential()
+        self.foe = Foe(team=0)
+        self.__speed = 0.0
+        self.__battery = 0.0
+        self.__auto = 0
 
     @property
     def speed(self):
@@ -280,15 +333,85 @@ class Vehicle:
                     tu_interop_compat.tu_interop_compat_time["millisecond"][
                         "locale"]: self.target.time_end.millisecond}}
 
+    @property
+    def dict_judge_login(self):
+        return {tu_interop_compat.tu_interop_compat_login["user_name"]["locale"]: self.credential.user_name,
+                tu_interop_compat.tu_interop_compat_login["user_password"]["locale"]: self.credential.user_password}
+
     def __dict__(self):
         return {"time": self.time.__dict__(),
                 "location": self.location.__dict__(),
                 "attitude": self.attitude.__dict__(),
                 "target": self.target.__dict__(),
+                "credential": self.credential.__dict__(),
+                "foe": self.foe.__dict__(),
                 "team": self.team,
                 "speed": self.speed,
                 "battery": self.battery,
                 "auto": self.auto}
+
+    def __str__(self):
+        return str(self.__dict__())
+
+
+class Judge:
+    def __init__(self):
+        self.__time = Time()
+        self.__path_login = tu_interop_compat.tu_interop_compat_path_server_login
+        self.__path_logout = tu_interop_compat.tu_interop_compat_path_server_logout
+        self.__path_time = tu_interop_compat.tu_interop_compat_path_server_time
+        self.__path_send = tu_interop_compat.tu_interop_compat_path_server_send
+        self.__path_lock = tu_interop_compat.tu_interop_compat_path_server_lock
+        self.__connected = False
+        self.__allowed = False
+        self.__foes = []
+
+    @property
+    def time(self):
+        return self.__time
+
+    @property
+    def path_login(self):
+        return self.__path_login
+
+    @property
+    def path_logout(self):
+        return self.__path_logout
+
+    @property
+    def path_time(self):
+        return self.__path_time
+
+    @property
+    def path_send(self):
+        return self.__path_send
+
+    @property
+    def path_lock(self):
+        return self.__path_lock
+
+    @property
+    def connected(self):
+        return self.__connected
+
+    @property
+    def allowed(self):
+        return self.__allowed
+
+    @property
+    def foes(self):
+        return self.__foes
+
+    def __dict__(self):
+        return {"time": self.time.__dict__(),
+                "path_login": self.path_login,
+                "path_logout": self.path_logout,
+                "path_time": self.path_time,
+                "path_send": self.path_send,
+                "path_lock": self.path_lock,
+                "connected": self.connected,
+                "allowed": self.allowed,
+                "foes": [foe.__dict__() for foe in self.foes]}
 
     def __str__(self):
         return str(self.__dict__())
@@ -300,7 +423,8 @@ if __name__ == "__main__":
     my_vehicle = Vehicle(team=26)
     my_judge = Judge()
 
-    pprint.pprint(my_vehicle.__dict__(), width=1, sort_dicts=False)
-    pprint.pprint(my_judge.__dict__(), width=1, sort_dicts=False)
-    pprint.pprint(my_vehicle.dict_judge_telemetry, width=1, sort_dicts=False)
-    pprint.pprint(my_vehicle.dict_judge_lock, width=1, sort_dicts=False)
+    pprint.pprint(my_vehicle.__dict__(), width=1)
+    pprint.pprint(my_judge.__dict__(), width=1)
+    # pprint.pprint(my_vehicle.dict_judge_telemetry, width=1)
+    # pprint.pprint(my_vehicle.dict_judge_lock, width=1)
+    # pprint.pprint(my_vehicle.dict_judge_login, width=1)
