@@ -9,10 +9,10 @@ capture_device = cv2.VideoCapture("http://{0}:{1}/stream.mjpg".format(tu_setting
 while True:
 
     # capture frame
-    ret, frame = capture_device.read()
+    success, image_frame = capture_device.read()
 
     # show the frame
-    cv2.imshow("tu_video_raw", frame)
+    cv2.imshow("tu_video_raw", image_frame)
 
     # break the loop if requested
     if cv2.waitKey(1) & 0xFF == ord("q"):
