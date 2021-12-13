@@ -1,13 +1,13 @@
-import tu_interop_compat
+import tu_interop.tu_interop_compat as tu_interop_compat
 import tu_settings
 
 
 class Time:
-    def __init__(self, hour=0, minute=0, second=0, millisecond=0):
-        self.__hour = hour
-        self.__minute = minute
-        self.__second = second
-        self.__millisecond = millisecond
+    def __init__(self):
+        self.__hour = 0
+        self.__minute = 0
+        self.__second = 0
+        self.__millisecond = 0
 
     @property
     def hour(self):
@@ -27,19 +27,35 @@ class Time:
 
     @hour.setter
     def hour(self, hour: int):
-        self.__hour = hour
+        if type(hour) not in (int, float):
+            raise TypeError
+        if not 0 <= hour < 24:
+            raise ValueError
+        self.__hour = int(hour)
 
     @minute.setter
     def minute(self, minute: int):
-        self.__minute = minute
+        if type(minute) not in (int, float):
+            raise TypeError
+        if not 0 <= minute < 60:
+            raise ValueError
+        self.__minute = int(minute)
 
     @second.setter
     def second(self, second: int):
-        self.__second = second
+        if type(second) not in (int, float):
+            raise TypeError
+        if not 0 <= second < 60:
+            raise ValueError
+        self.__second = int(second)
 
     @millisecond.setter
     def millisecond(self, millisecond: int):
-        self.__millisecond = millisecond
+        if type(millisecond) not in (int, float):
+            raise TypeError
+        if not 0 <= millisecond < 1000:
+            raise ValueError
+        self.__millisecond = int(millisecond)
 
     def __dict__(self):
         return {"hour": self.hour,
@@ -52,10 +68,10 @@ class Time:
 
 
 class Location:
-    def __init__(self, latitude=0.0, longitude=0.0, altitude=0.0):
-        self.__latitude = latitude
-        self.__longitude = longitude
-        self.__altitude = altitude
+    def __init__(self):
+        self.__latitude = 0.0
+        self.__longitude = 0.0
+        self.__altitude = 0.0
 
     @property
     def latitude(self):
@@ -71,15 +87,25 @@ class Location:
 
     @latitude.setter
     def latitude(self, latitude: float):
-        self.__latitude = latitude
+        if type(latitude) not in (int, float):
+            raise TypeError
+        if not -90.0 <= latitude <= 90.0:
+            raise ValueError
+        self.__latitude = float(latitude)
 
     @longitude.setter
     def longitude(self, longitude: float):
-        self.__longitude = longitude
+        if type(longitude) not in (int, float):
+            raise TypeError
+        if not -180.0 <= longitude <= 180.0:
+            raise ValueError
+        self.__longitude = float(longitude)
 
     @altitude.setter
     def altitude(self, altitude: float):
-        self.__altitude = altitude
+        if type(altitude) not in (int, float):
+            raise TypeError
+        self.__altitude = float(altitude)
 
     def __dict__(self):
         return {"latitude": self.latitude,
@@ -91,10 +117,10 @@ class Location:
 
 
 class Attitude:
-    def __init__(self, roll=0.0, pitch=0.0, heading=0.0):
-        self.__roll = roll
-        self.__pitch = pitch
-        self.__heading = heading
+    def __init__(self):
+        self.__roll = 0.0
+        self.__pitch = 0.0
+        self.__heading = 0.0
 
     @property
     def roll(self):
@@ -110,15 +136,27 @@ class Attitude:
 
     @roll.setter
     def roll(self, roll: float):
-        self.__roll = roll
+        if type(roll) not in (int, float):
+            raise TypeError
+        if not -180.0 <= roll <= 180.0:
+            raise ValueError
+        self.__roll = float(roll)
 
     @pitch.setter
     def pitch(self, pitch: float):
-        self.__pitch = pitch
+        if type(pitch) not in (int, float):
+            raise TypeError
+        if not -180.0 <= pitch <= 180.0:
+            raise ValueError
+        self.__pitch = float(pitch)
 
     @heading.setter
     def heading(self, heading: float):
-        self.__heading = heading
+        if type(heading) not in (int, float):
+            raise TypeError
+        if not 0.0 <= heading <= 360.0:
+            raise ValueError
+        self.__heading = float(heading)
 
     def __dict__(self):
         return {"roll": self.roll,
@@ -130,14 +168,14 @@ class Attitude:
 
 
 class Target:
-    def __init__(self, lock=0, x=0, y=0, width=0, height=0):
+    def __init__(self):
         self.time_start = Time()
         self.time_end = Time()
-        self.__lock = lock
-        self.__x = x
-        self.__y = y
-        self.__width = width
-        self.__height = height
+        self.__lock = 0
+        self.__x = 0
+        self.__y = 0
+        self.__width = 0
+        self.__height = 0
 
     @property
     def lock(self):
@@ -161,22 +199,42 @@ class Target:
 
     @lock.setter
     def lock(self, lock: int):
+        if type(lock) != int:
+            raise TypeError
+        if lock not in (0, 1):
+            raise ValueError
         self.__lock = lock
 
     @x.setter
     def x(self, x: int):
+        if type(x) != int:
+            raise TypeError
+        if not 0 <= x <= tu_settings.tu_video_stream_width:
+            raise ValueError
         self.__x = x
 
     @y.setter
     def y(self, y: int):
+        if type(y) != int:
+            raise TypeError
+        if not 0 <= y <= tu_settings.tu_video_stream_height:
+            raise ValueError
         self.__y = y
 
     @width.setter
     def width(self, width: int):
+        if type(width) != int:
+            raise TypeError
+        if not 0 <= width < tu_settings.tu_video_stream_width:
+            raise ValueError
         self.__width = width
 
     @height.setter
     def height(self, height: int):
+        if type(height) != int:
+            raise TypeError
+        if not 0 <= height < tu_settings.tu_video_stream_height:
+            raise ValueError
         self.__height = height
 
     def __dict__(self):
@@ -193,9 +251,9 @@ class Target:
 
 
 class Credential:
-    def __init__(self, user_name="", user_password=""):
-        self.__user_name = user_name
-        self.__user_password = user_password
+    def __init__(self):
+        self.__user_name = ""
+        self.__user_password = ""
 
     @property
     def user_name(self):
@@ -207,10 +265,18 @@ class Credential:
 
     @user_name.setter
     def user_name(self, user_name: str):
+        if type(user_name) != str:
+            raise TypeError
+        if user_name == "":
+            raise ValueError
         self.__user_name = user_name
 
     @user_password.setter
     def user_password(self, user_password: str):
+        if type(user_password) != str:
+            raise TypeError
+        if user_password == "":
+            raise ValueError
         self.__user_password = user_password
 
     def __dict__(self):
@@ -222,11 +288,11 @@ class Credential:
 
 
 class BaseVehicle:
-    def __init__(self, team: int):
+    def __init__(self):
         self.time = Time()
         self.location = Location()
         self.attitude = Attitude()
-        self.__team = team
+        self.__team = 0
 
     @property
     def team(self):
@@ -234,6 +300,10 @@ class BaseVehicle:
 
     @team.setter
     def team(self, team: int):
+        if type(team) != int:
+            raise TypeError
+        if team < 0:
+            raise ValueError
         self.__team = team
 
     def __dict__(self):
@@ -247,8 +317,8 @@ class BaseVehicle:
 
 
 class Foe(BaseVehicle):
-    def __init__(self, team: int):
-        super().__init__(team)
+    def __init__(self):
+        super().__init__()
 
     def __dict__(self):
         return {"time": self.time.__dict__(),
@@ -261,11 +331,11 @@ class Foe(BaseVehicle):
 
 
 class Vehicle(BaseVehicle):
-    def __init__(self, team: int):
-        super().__init__(team)
+    def __init__(self):
+        super().__init__()
         self.target = Target()
         self.credential = Credential()
-        self.foe = Foe(team=0)
+        self.foe = Foe()
         self.__speed = 0.0
         self.__battery = 0.0
         self.__auto = 0
@@ -284,14 +354,24 @@ class Vehicle(BaseVehicle):
 
     @speed.setter
     def speed(self, speed: float):
-        self.__speed = speed
+        if type(speed) not in (int, float):
+            raise TypeError
+        self.__speed = float(speed)
 
     @battery.setter
     def battery(self, battery: float):
-        self.__battery = battery
+        if type(battery) not in (int, float):
+            raise TypeError
+        if not 0.0 <= battery <= 100.0:
+            raise ValueError
+        self.__battery = float(battery)
 
     @auto.setter
     def auto(self, auto: int):
+        if type(auto) != int:
+            raise TypeError
+        if auto not in (0, 1):
+            raise ValueError
         self.__auto = auto
 
     @property
@@ -420,7 +500,7 @@ class Judge:
 if __name__ == "__main__":
     import pprint
 
-    my_vehicle = Vehicle(team=26)
+    my_vehicle = Vehicle()
     my_judge = Judge()
 
     pprint.pprint(my_vehicle.__dict__(), width=1)
