@@ -1,4 +1,3 @@
-import cv2
 import tu_video_utils
 import tu_settings
 
