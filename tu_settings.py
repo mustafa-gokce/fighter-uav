@@ -3,7 +3,7 @@ tu_vehicle_ip = "192.168.1.201"
 
 # settings for video streaming
 tu_video_stream_ip_remote = tu_vehicle_ip
-tu_video_stream_ip_local = "127.0.0.1"
+tu_video_stream_ip_local = "0.0.0.0"
 tu_video_stream_id_device = -1
 tu_video_stream_port_remote_raw = 9000
 tu_video_stream_port_local_raw = 9001

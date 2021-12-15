@@ -1,38 +1,27 @@
 import time
 import threading
-import zmq
 import numpy
 import cv2
 import dearpygui.dearpygui as dearpygui
+import tu_video.tu_video_utils as tu_video_utils
 import tu_settings
-
-
-# subscribe video stream ing endpoints
-def tu_video_sub(socket, flags=0, copy=True, track=False):
-    data = socket.recv_json(flags=flags)
-    md = socket.recv_json(flags=flags)
-    msg = socket.recv(flags=flags, copy=copy, track=track)
-    img = numpy.frombuffer(bytes(memoryview(msg)), dtype=md["dtype"])
-    return data, img.reshape(md["shape"])
 
 
 def receive_video_stream(video_stream_port, video_stream_name):
     # create socket
-    context = zmq.Context()
-    socket = context.socket(zmq.SUB)
-    socket.setsockopt(zmq.SUBSCRIBE, b"")
-    socket.connect("tcp://" + tu_settings.tu_video_stream_ip_local + ":" + str(video_stream_port))
+    sub_socket = tu_video_utils.tu_video_socket_sub(tu_settings.tu_video_stream_ip_local,
+                                                    video_stream_port)
 
     # delay first because of the socket bindings
     time.sleep(tu_settings.tu_video_stream_delay)
 
     while True:
         # get the contents
-        my_data, my_image = tu_video_sub(socket)
+        my_data, my_image = tu_video_utils. tu_video_sub(sub_socket)
         my_image = cv2.resize(my_image, (640, 360), interpolation=cv2.INTER_AREA)
         data = numpy.flip(my_image, 2)
         data = data.ravel()
-        data = numpy.asfarray(data, dtype='f')
+        data = numpy.asfarray(data, dtype="f")
         texture_data = numpy.true_divide(data, 255.0)
         dearpygui.set_value(video_stream_name, texture_data)
         global stop_threads
@@ -57,7 +46,8 @@ with dearpygui.window(label="tu_video_raw",
     dearpygui.add_image("tu_video_raw_frame")
 
 with dearpygui.texture_registry(show=False):
-    dearpygui.add_dynamic_texture(640, 360, numpy.array(numpy.zeros((640, 360, 3)))[:], tag="tu_video_judge_frame")
+    dearpygui.add_raw_texture(640, 360, numpy.array(numpy.zeros((640, 360, 3)))[:], tag="tu_video_judge_frame",
+                              format=dearpygui.mvFormat_Float_rgb)
 
 with dearpygui.window(label="tu_video_judge",
                       pos=(0, 540), width=655, height=395,
@@ -67,7 +57,8 @@ with dearpygui.window(label="tu_video_judge",
     dearpygui.add_image("tu_video_judge_frame")
 
 with dearpygui.texture_registry(show=False):
-    dearpygui.add_dynamic_texture(640, 360, numpy.array(numpy.zeros((640, 360, 3)))[:], tag="tu_video_osd_frame")
+    dearpygui.add_raw_texture(640, 360, numpy.array(numpy.zeros((640, 360, 3)))[:], tag="tu_video_osd_frame",
+                              format=dearpygui.mvFormat_Float_rgb)
 
 with dearpygui.window(label="tu_video_osd",
                       pos=(1920 - 655, 0), width=655, height=395,
