@@ -13,6 +13,7 @@ while True:
     # receive video stream from source
     my_data, my_image = tu_video_utils.tu_video_sub(sub_socket)
 
+    # process the frame for judge
     my_image = cv2.flip(my_image, 1)
 
     # publish video stream to endpoints
