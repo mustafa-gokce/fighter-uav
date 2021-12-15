@@ -108,7 +108,7 @@ while True:
             capture_device.start_recording(output, format="mjpeg")
 
             # prepare address
-            address = (tu_settings.tu_vehicle_ip, tu_settings.tu_video_stream_port)
+            address = (tu_settings.tu_vehicle_ip, tu_settings.tu_video_stream_port_remote_raw)
 
             # create streaming server object
             server = StreamingServer(address, StreamingHandler)
