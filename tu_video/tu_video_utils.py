@@ -18,7 +18,7 @@ def tu_video_sub(socket, flags=0, copy=True, track=False):
 
 
 # create pub socket
-def tu_video_socket_pub(port):
+def tu_video_create_pub(port):
     pub_context = zmq.Context()
     pub_socket = pub_context.socket(zmq.PUB)
     pub_socket.bind("tcp://*:" + str(port))
@@ -26,7 +26,7 @@ def tu_video_socket_pub(port):
 
 
 # create sub socket
-def tu_video_socket_sub(ip, port):
+def tu_video_create_sub(ip, port):
     sub_context = zmq.Context()
     sub_socket = sub_context.socket(zmq.SUB)
     sub_socket.setsockopt(zmq.SUBSCRIBE, b"")
