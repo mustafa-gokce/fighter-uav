@@ -10,7 +10,7 @@ capture_device.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*"MJPG"))
 capture_device.set(cv2.CAP_PROP_FPS, tu_settings.tu_video_stream_fps)
 
 # create pub socket
-pub_socket = tu_video_utils.tu_video_socket_pub(tu_settings.tu_video_stream_port_remote_raw)
+pub_socket = tu_video_utils.tu_video_create_pub(tu_settings.tu_video_stream_port_remote_raw)
 
 # do below always
 loop_count = 0
