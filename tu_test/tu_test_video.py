@@ -20,7 +20,7 @@ while True:
     success, image_frame = capture_device.read()
 
     # publish video stream to endpoints
-    tu_video_utils.tu_video_pub(pub_socket, image_frame, {"loop_count": loop_count})
+    tu_video_utils.tu_video_pub(pub_socket, image_frame, {"pub_loop_count": loop_count})
 
     # update loop counter
     loop_count += 1
