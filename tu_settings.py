@@ -1,5 +1,5 @@
 # settings for vehicle
-tu_vehicle_ip = "0.0.0.0"
+tu_vehicle_ip = "10.10.27.201"
 
 # settings for video streaming
 tu_video_stream_ip_remote = tu_vehicle_ip
