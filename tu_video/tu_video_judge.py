@@ -1,3 +1,4 @@
+import sys
 import cv2
 import tu_video_utils
 import tu_settings
@@ -30,6 +31,9 @@ while True:
 
     # publish video stream to endpoints
     tu_video_utils.tu_video_pub(pub_socket, my_image, my_data)
+
+    # to judge server
+    sys.stdout.buffer.write(my_image.tobytes())
 
     # update loop counter
     loop_count += 1
