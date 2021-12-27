@@ -6,7 +6,7 @@ import tu_settings
 
 # capture device url
 capture_device_url = "http://{0}:{1}/stream.mjpg".format(tu_settings.tu_video_stream_ip_remote,
-                                                                 tu_settings.tu_video_stream_port_remote_raw)
+                                                         tu_settings.tu_video_stream_port_remote_raw)
 
 # create pub socket
 pub_socket = tu_video_utils.tu_video_create_pub(tu_settings.tu_video_stream_port_local_raw)
@@ -19,7 +19,7 @@ while True:
     try:
 
         # create stream
-        capture_device = urllib.request.urlopen(capture_device_url, timeout=0.05)
+        capture_device = urllib.request.urlopen(capture_device_url, timeout=tu_settings.tu_video_stream_timeout)
 
         # create frame bytes
         frame_bytes = bytes()
@@ -39,7 +39,6 @@ while True:
 
                 # we have start and end
                 if frame_start != -1 and frame_end != -1:
-
                     # get the jpeg frame
                     frame_jpeg = frame_bytes[frame_start:frame_end + 2]
 
@@ -66,4 +65,6 @@ while True:
 
     # could not connect to stream so retry
     except Exception as e:
+
+        # do nothing
         pass
