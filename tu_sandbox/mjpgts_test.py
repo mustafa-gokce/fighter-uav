@@ -21,3 +21,5 @@ cap.release()
 cv2.destroyAllWindows()
 
 # python3 mjpgts_test.py | ffmpeg -f rawvideo -pixel_format bgr24 -video_size 1280x720 -framerate 41 -i - -vf format=yuv420p -f v4l2 /dev/video17
+# ffmpeg -i d5.mp4 -v 0 -vb 50M -vcodec mpeg4 -f mpegts udp://127.0.0.1:23000
+# ffplay udp://127.0.0.1:23000
