@@ -13,6 +13,7 @@ tu_video_stream_width = 1280
 tu_video_stream_height = 720
 tu_video_stream_fps = 41
 tu_video_stream_delay = 2
+tu_video_stream_timeout = 0.2
 
 # settings for judge server
 tu_server_ip = "127.0.0.25"
