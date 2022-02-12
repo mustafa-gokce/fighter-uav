@@ -1,5 +1,10 @@
-import tu_interop.tu_interop_compat as tu_interop_compat
+import math
+import threading
+import datetime
+import pymavlink.mavutil as utility
+import pymavlink.dialects.v20.all as dialect
 import tu_settings
+import tu_interop.tu_interop_compat as tu_interop_compat
 
 
 class Time:
@@ -339,6 +344,8 @@ class Vehicle(BaseVehicle):
         self.__speed = 0.0
         self.__battery = 0.0
         self.__auto = 0
+        self.__mavlink = None
+        self.__get_telemetry_thread = None
 
     @property
     def speed(self):
@@ -433,6 +440,51 @@ class Vehicle(BaseVehicle):
     def __str__(self):
         return str(self.__dict__())
 
+    def connect_telemetry(self):
+        if self.__mavlink is None:
+            connection_string = "{0}:{1}".format(tu_settings.tu_telem_stream_ip_local,
+                                                 tu_settings.tu_telem_stream_port_local)
+            self.__mavlink = utility.mavlink_connection(connection_string)
+            self.__mavlink.wait_heartbeat()
+
+            if self.__get_telemetry_thread is None:
+                self.__get_telemetry_thread = threading.Thread(target=self.__get_telemetry)
+                self.__get_telemetry_thread.start()
+
+    def __get_telemetry(self):
+        while True:
+
+            message = self.__mavlink.recv_msg()
+
+            if not message:
+                continue
+
+            message = message.to_dict()
+
+            if message["mavpackettype"] == dialect.MAVLink_global_position_int_message.name:
+                self.location.latitude = message["lat"] * 1e-7
+                self.location.longitude = message["lon"] * 1e-7
+                self.location.altitude = message["relative_alt"] * 1e-3
+                self.attitude.heading = message["hdg"] * 1e-2
+
+            elif message["mavpackettype"] == dialect.MAVLink_attitude_message.name:
+                self.attitude.roll = math.degrees(message["roll"])
+                self.attitude.pitch = math.degrees(message["pitch"])
+
+            elif message["mavpackettype"] == dialect.MAVLink_vfr_hud_message.name:
+                self.speed = message["groundspeed"]
+
+            elif message["mavpackettype"] == dialect.MAVLink_sys_status_message.name:
+                self.battery = message["battery_remaining"]
+
+            elif message["mavpackettype"] == dialect.MAVLink_system_time_message.name:
+                unix_time = message["time_unix_usec"]
+                unix_time = datetime.datetime.utcfromtimestamp(unix_time * 1e-6)
+                self.time.hour = unix_time.hour
+                self.time.minute = unix_time.minute
+                self.time.second = unix_time.second
+                self.time.millisecond = int(unix_time.microsecond * 1e-3)
+
 
 class Judge:
     def __init__(self):
@@ -495,16 +547,3 @@ class Judge:
 
     def __str__(self):
         return str(self.__dict__())
-
-
-if __name__ == "__main__":
-    import pprint
-
-    my_vehicle = Vehicle()
-    my_judge = Judge()
-
-    pprint.pprint(my_vehicle.__dict__(), width=1)
-    pprint.pprint(my_judge.__dict__(), width=1)
-    # pprint.pprint(my_vehicle.dict_judge_telemetry, width=1)
-    # pprint.pprint(my_vehicle.dict_judge_lock, width=1)
-    # pprint.pprint(my_vehicle.dict_judge_login, width=1)
