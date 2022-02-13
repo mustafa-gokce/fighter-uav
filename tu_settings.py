@@ -22,10 +22,10 @@ tu_video_stream_timeout = 0.2
 
 # setting for telemetry streaming
 tu_telem_stream_test = True
-tu_telem_stream_ip_remote = tu_vehicle_ip
-tu_telem_stream_ip_local = "127.0.0.1"
-tu_telem_stream_port_remote = 10000
-tu_telem_stream_port_local = 14560
+tu_telem_stream_remote_ip = tu_vehicle_ip
+tu_telem_stream_local_ip = "127.0.0.1"
+tu_telem_stream_remote_port = 10000
+tu_telem_stream_local_port = 14560
 
 # settings for judge server
 tu_server_ip = "127.0.0.25"
