@@ -49,8 +49,10 @@ class StreamingHandler(http.server.BaseHTTPRequestHandler):
 
                 # do below always
                 while True:
+
                     # start output condition context
                     with output.condition:
+
                         # wait until the frame arrives
                         output.condition.wait()
 
@@ -83,6 +85,7 @@ class StreamingHandler(http.server.BaseHTTPRequestHandler):
 
 # define streaming server object
 class StreamingServer(socketserver.ThreadingMixIn, http.server.HTTPServer):
+
     # allow reusing streaming server address
     allow_reuse_address = True
 
