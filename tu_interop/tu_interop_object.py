@@ -442,8 +442,12 @@ class Vehicle(BaseVehicle):
 
     def connect_telemetry(self):
         if self.__mavlink is None:
-            connection_string = "{0}:{1}".format(tu_settings.tu_telem_stream_ip_local,
-                                                 tu_settings.tu_telem_stream_port_local)
+            if tu_settings.tu_telem_stream_test:
+                connection_string = "{0}:{1}".format(tu_settings.tu_telem_stream_local_ip,
+                                                     tu_settings.tu_telem_stream_local_port)
+            else:
+                connection_string = "{0}:{1}".format(tu_settings.tu_telem_stream_remote_ip,
+                                                     tu_settings.tu_telem_stream_remote_port)
             self.__mavlink = utility.mavlink_connection(connection_string)
             self.__mavlink.wait_heartbeat()
 
