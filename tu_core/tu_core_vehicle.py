@@ -12,7 +12,7 @@ tu_logger.logger.info("started")
 tu_competition = tu_interop.tu_interop_object.Competition()
 
 # log the competition
-tu_logger.logger.info("competition info: " + tu_competition.__dict__().__str__())
+tu_logger.logger.info("competition info: {0} {1}".format(tu_competition.day_name, tu_competition.round_local_name))
 
 # get the vehicle
 tu_vehicle = tu_interop.tu_interop_object.Vehicle()

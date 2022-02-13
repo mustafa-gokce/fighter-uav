@@ -447,9 +447,39 @@ class Vehicle(BaseVehicle):
             self.__mavlink = utility.mavlink_connection(connection_string)
             self.__mavlink.wait_heartbeat()
 
+            self.__mavlink_stream_rate_set()
+
             if self.__get_telemetry_thread is None:
                 self.__get_telemetry_thread = threading.Thread(target=self.__get_telemetry)
                 self.__get_telemetry_thread.start()
+
+    def __mavlink_stream_rate_set(self):
+
+        def stream_rate_set_message(target_system, target_component, message_id, message_frequency):
+            return dialect.MAVLink_command_long_message(target_system=target_system,
+                                                        target_component=target_component,
+                                                        command=dialect.MAV_CMD_SET_MESSAGE_INTERVAL,
+                                                        confirmation=0,
+                                                        param1=message_id,
+                                                        param2=1e6 / message_frequency,
+                                                        param3=0,
+                                                        param4=0,
+                                                        param5=0,
+                                                        param6=0,
+                                                        param7=0)
+
+        def stream_rate_set(message_id, message_frequency):
+            message = stream_rate_set_message(target_system=self.__mavlink.target_system,
+                                              target_component=self.__mavlink.target_component,
+                                              message_id=message_id,
+                                              message_frequency=message_frequency)
+            self.__mavlink.mav.send(message)
+
+        stream_rate_set(message_id=dialect.MAVLINK_MSG_ID_GLOBAL_POSITION_INT, message_frequency=10)
+        stream_rate_set(message_id=dialect.MAVLINK_MSG_ID_ATTITUDE, message_frequency=10)
+        stream_rate_set(message_id=dialect.MAVLINK_MSG_ID_VFR_HUD, message_frequency=10)
+        stream_rate_set(message_id=dialect.MAVLINK_MSG_ID_SYS_STATUS, message_frequency=10)
+        stream_rate_set(message_id=dialect.MAVLINK_MSG_ID_SYSTEM_TIME, message_frequency=10)
 
     def __get_telemetry(self):
         while True:
@@ -561,7 +591,7 @@ class Competition:
 
     @property
     def day_name(self):
-        return "Day: {0}".format(self.day)
+        return "day: {0}".format(self.day)
 
     @property
     def round_local(self):
@@ -569,7 +599,7 @@ class Competition:
 
     @property
     def round_local_name(self):
-        return "Round: {0}".format(self.round_local)
+        return "round: {0}".format(self.round_local)
 
     @property
     def round_global(self):
@@ -577,7 +607,7 @@ class Competition:
 
     @property
     def round_global_name(self):
-        return "Round: {0}".format(self.round_global)
+        return "round: {0}".format(self.round_global)
 
     def __dict__(self):
         return {"day": self.day,
