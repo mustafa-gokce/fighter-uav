@@ -475,11 +475,12 @@ class Vehicle(BaseVehicle):
                                               message_frequency=message_frequency)
             self.__mavlink.mav.send(message)
 
-        stream_rate_set(message_id=dialect.MAVLINK_MSG_ID_GLOBAL_POSITION_INT, message_frequency=10)
-        stream_rate_set(message_id=dialect.MAVLINK_MSG_ID_ATTITUDE, message_frequency=10)
-        stream_rate_set(message_id=dialect.MAVLINK_MSG_ID_VFR_HUD, message_frequency=10)
-        stream_rate_set(message_id=dialect.MAVLINK_MSG_ID_SYS_STATUS, message_frequency=10)
-        stream_rate_set(message_id=dialect.MAVLINK_MSG_ID_SYSTEM_TIME, message_frequency=10)
+        for stream_id in (dialect.MAVLINK_MSG_ID_GLOBAL_POSITION_INT,
+                          dialect.MAVLINK_MSG_ID_ATTITUDE,
+                          dialect.MAVLINK_MSG_ID_VFR_HUD,
+                          dialect.MAVLINK_MSG_ID_SYS_STATUS,
+                          dialect.MAVLINK_MSG_ID_SYSTEM_TIME):
+            stream_rate_set(message_id=stream_id, message_frequency=5)
 
     def __get_telemetry(self):
         while True:
