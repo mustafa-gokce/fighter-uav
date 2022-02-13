@@ -547,3 +547,45 @@ class Judge:
 
     def __str__(self):
         return str(self.__dict__())
+
+
+class Competition:
+
+    def __init__(self):
+        self.__day = tu_settings.tu_competition_day
+        self.__round = tu_settings.tu_competition_round
+
+    @property
+    def day(self):
+        return self.__day
+
+    @property
+    def day_name(self):
+        return "Day: {0}".format(self.day)
+
+    @property
+    def round_local(self):
+        return self.__round
+
+    @property
+    def round_local_name(self):
+        return "Round: {0}".format(self.round_local)
+
+    @property
+    def round_global(self):
+        return (self.day - 1) * 2 + self.round_local
+
+    @property
+    def round_global_name(self):
+        return "Round: {0}".format(self.round_global)
+
+    def __dict__(self):
+        return {"day": self.day,
+                "day_name": self.day_name,
+                "round_local": self.round_local,
+                "round_local_name": self.round_local_name,
+                "round_global": self.round_global,
+                "round_global_name": self.round_global_name}
+
+    def __str__(self):
+        return str(self.__dict__())
