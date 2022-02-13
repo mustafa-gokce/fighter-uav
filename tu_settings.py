@@ -1,3 +1,7 @@
+# setting for competition
+tu_competition_day = 1
+tu_competition_round = 1
+
 # settings for vehicle
 tu_vehicle_ip = "10.10.27.201"
 
