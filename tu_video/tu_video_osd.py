@@ -16,11 +16,12 @@ osd_font_thickness = 2
 osd_font_line_type = cv2.LINE_AA
 
 # create sub socket
-sub_socket = tu_video_utils.tu_video_create_sub(tu_settings.tu_video_stream_ip_local,
-                                                tu_settings.tu_video_stream_port_local_raw)
+sub_socket = tu_video_utils.tu_video_create_sub(ip=tu_settings.tu_video_stream_ip_local,
+                                                port=tu_settings.tu_video_stream_port_local_raw)
 
 # create pub socket
-pub_socket = tu_video_utils.tu_video_create_pub(tu_settings.tu_video_stream_port_local_osd)
+pub_socket = tu_video_utils.tu_video_create_pub(ip=tu_settings.tu_video_stream_ip_local,
+                                                port=tu_settings.tu_video_stream_port_local_osd)
 
 # loop related variables
 loop_count = 0
@@ -39,11 +40,12 @@ fps_publish = 0
 
 # do below always
 while True:
+
     # initial time
     time_initial = time.time()
 
     # receive video stream from source
-    my_data, my_image = tu_video_utils.tu_video_sub(sub_socket)
+    my_data, my_image = tu_video_utils.tu_video_sub(socket=sub_socket)
 
     # time after receiving a frame
     time_receive = time.time()
@@ -78,7 +80,9 @@ while True:
     time_plot = time.time()
 
     # publish video stream to endpoints
-    tu_video_utils.tu_video_pub(pub_socket, my_image, my_data)
+    tu_video_utils.tu_video_pub(socket=pub_socket,
+                                image=my_image,
+                                data=my_data)
 
     # time after publishing to remote
     time_publish = time.time()

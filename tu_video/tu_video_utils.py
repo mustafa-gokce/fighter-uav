@@ -3,10 +3,10 @@ import zmq
 
 
 # publish video stream to endpoints
-def tu_video_pub(socket, img, data, flags=0):
-    img = simplejpeg.encode_jpeg(img)
+def tu_video_pub(socket, image, data, flags=0):
+    image = simplejpeg.encode_jpeg(image)
     socket.send_json(data, flags | zmq.SNDMORE)
-    return socket.send(img, flags)
+    return socket.send(image, flags)
 
 
 # subscribe video stream ing endpoints
@@ -18,10 +18,10 @@ def tu_video_sub(socket, flags=0, copy=True, track=False):
 
 
 # create pub socket
-def tu_video_create_pub(port):
+def tu_video_create_pub(ip, port):
     pub_context = zmq.Context()
     pub_socket = pub_context.socket(zmq.PUB)
-    pub_socket.bind("tcp://*:" + str(port))
+    pub_socket.bind("tcp://" + str(ip) + ":" + str(port))
     return pub_socket
 
 
