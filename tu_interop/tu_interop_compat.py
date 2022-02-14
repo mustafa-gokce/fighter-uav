@@ -71,36 +71,36 @@ tu_interop_compat_login = {
 Server login compatability declaration
 """
 
-tu_interop_compat_path_server_time = "http://{0}:{1}/api/{2}".format(tu_settings.tu_server_ip,
-                                                                     tu_settings.tu_server_port,
+tu_interop_compat_path_server_time = "http://{0}:{1}/api/{2}".format(tu_settings.tu_judge_server_ip,
+                                                                     tu_settings.tu_judge_server_port,
                                                                      "sunucusaati")
 """
 Server path to get server system time
 """
 
-tu_interop_compat_path_server_send = "http://{0}:{1}/api/{2}".format(tu_settings.tu_server_ip,
-                                                                     tu_settings.tu_server_port,
+tu_interop_compat_path_server_send = "http://{0}:{1}/api/{2}".format(tu_settings.tu_judge_server_ip,
+                                                                     tu_settings.tu_judge_server_port,
                                                                      "telemetri_gonder")
 """
 Server path to post telemetry data and get foe team telemetry data
 """
 
-tu_interop_compat_path_server_lock = "http://{0}:{1}/api/{2}".format(tu_settings.tu_server_ip,
-                                                                     tu_settings.tu_server_port,
+tu_interop_compat_path_server_lock = "http://{0}:{1}/api/{2}".format(tu_settings.tu_judge_server_ip,
+                                                                     tu_settings.tu_judge_server_port,
                                                                      "kilitlenme_bilgisi")
 """
 Server path to post target lock data
 """
 
-tu_interop_compat_path_server_login = "http://{0}:{1}/api/{2}".format(tu_settings.tu_server_ip,
-                                                                      tu_settings.tu_server_port,
+tu_interop_compat_path_server_login = "http://{0}:{1}/api/{2}".format(tu_settings.tu_judge_server_ip,
+                                                                      tu_settings.tu_judge_server_port,
                                                                       "giris")
 """
 Server path to login the competition round
 """
 
-tu_interop_compat_path_server_logout = "http://{0}:{1}/api/{2}".format(tu_settings.tu_server_ip,
-                                                                       tu_settings.tu_server_port,
+tu_interop_compat_path_server_logout = "http://{0}:{1}/api/{2}".format(tu_settings.tu_judge_server_ip,
+                                                                       tu_settings.tu_judge_server_port,
                                                                        "cikis")
 """
 Server path to logout the competition round

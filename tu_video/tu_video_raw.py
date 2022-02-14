@@ -4,12 +4,23 @@ import cv2
 import tu_video_utils
 import tu_settings
 
-# capture device url
-capture_device_url = "http://{0}:{1}/stream.mjpg".format(tu_settings.tu_video_stream_ip_remote,
-                                                         tu_settings.tu_video_stream_port_remote_raw)
+# testing mode is enabled
+if tu_settings.tu_video_stream_test:
+
+    # capture device is local
+    capture_device_url = "http://{0}:{1}/stream.mjpg".format(tu_settings.tu_video_stream_ip_local,
+                                                             tu_settings.tu_video_stream_port_local)
+
+# testing mode is disabled
+else:
+
+    # capture device is remote
+    capture_device_url = "http://{0}:{1}/stream.mjpg".format(tu_settings.tu_video_stream_ip_remote,
+                                                             tu_settings.tu_video_stream_port_remote)
 
 # create pub socket
-pub_socket = tu_video_utils.tu_video_create_pub(tu_settings.tu_video_stream_port_local_raw)
+pub_socket = tu_video_utils.tu_video_create_pub(ip=tu_settings.tu_video_stream_ip_local,
+                                                port=tu_settings.tu_video_stream_port_local_raw)
 
 # do below always
 loop_count = 0
@@ -19,7 +30,8 @@ while True:
     try:
 
         # create stream
-        capture_device = urllib.request.urlopen(capture_device_url, timeout=tu_settings.tu_video_stream_timeout)
+        capture_device = urllib.request.urlopen(url=capture_device_url,
+                                                timeout=tu_settings.tu_video_stream_timeout)
 
         # create frame bytes
         frame_bytes = bytes()
@@ -39,6 +51,7 @@ while True:
 
                 # we have start and end
                 if frame_start != -1 and frame_end != -1:
+
                     # get the jpeg frame
                     frame_jpeg = frame_bytes[frame_start:frame_end + 2]
 
@@ -52,7 +65,9 @@ while True:
                     my_data = {"raw_loop_count": loop_count}
 
                     # publish video stream to endpoints
-                    tu_video_utils.tu_video_pub(pub_socket, my_image, my_data)
+                    tu_video_utils.tu_video_pub(socket=pub_socket,
+                                                image=my_image,
+                                                data=my_data)
 
                     # update loop counter
                     loop_count += 1
