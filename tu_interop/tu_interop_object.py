@@ -1,8 +1,11 @@
 import math
 import threading
 import datetime
+import logging
+import requests
 import pymavlink.mavutil as utility
 import pymavlink.dialects.v20.all as dialect
+
 import tu_settings
 import tu_interop.tu_interop_compat as tu_interop_compat
 
@@ -256,9 +259,10 @@ class Target:
 
 
 class Credential:
-    def __init__(self):
-        self.__user_name = ""
-        self.__user_password = ""
+    def __init__(self, user_name=tu_settings.tu_credential_user_name,
+                 user_password=tu_settings.tu_credential_user_password):
+        self.__user_name = user_name
+        self.__user_password = user_password
 
     @property
     def user_name(self):
@@ -442,12 +446,8 @@ class Vehicle(BaseVehicle):
 
     def connect_telemetry(self):
         if self.__mavlink is None:
-            if tu_settings.tu_telem_stream_test:
-                connection_string = "{0}:{1}".format(tu_settings.tu_telem_stream_local_ip,
-                                                     tu_settings.tu_telem_stream_local_port)
-            else:
-                connection_string = "{0}:{1}".format(tu_settings.tu_telem_stream_remote_ip,
-                                                     tu_settings.tu_telem_stream_remote_port)
+            connection_string = "{0}:{1}".format(tu_settings.tu_telem_stream_ip,
+                                                 tu_settings.tu_telem_stream_port_interop)
             self.__mavlink = utility.mavlink_connection(connection_string)
             self.__mavlink.wait_heartbeat()
 
@@ -532,6 +532,8 @@ class Judge:
         self.__connected = False
         self.__allowed = False
         self.__foes = []
+        self.__connection = None
+        self.__connection_thread = None
 
     @property
     def time(self):
@@ -568,6 +570,28 @@ class Judge:
     @property
     def foes(self):
         return self.__foes
+
+    def connect_server(self, vehicle=Vehicle()):
+
+        self.__connected = False
+        self.__connection = None
+
+        while not self.__connected:
+
+            if self.__connection is None:
+
+                urllib3_logger = logging.getLogger("urllib3")
+                urllib3_logger.setLevel(logging.CRITICAL)
+                self.__connection = requests.Session()
+
+            login_response = self.__connection.post(url=self.__path_login,
+                                                    headers={"Content-Type": "application/json"},
+                                                    json=vehicle.dict_judge_login)
+            login_response = login_response.json()
+
+            if "result" in login_response.keys():
+                if login_response["result"] == "success":
+                    self.__connected = True
 
     def __dict__(self):
         return {"time": self.time.__dict__(),

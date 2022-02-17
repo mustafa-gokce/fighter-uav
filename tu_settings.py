@@ -21,12 +21,15 @@ tu_video_stream_delay = 2
 tu_video_stream_timeout = 0.2
 
 # setting for telemetry streaming
-tu_telem_stream_test = True
-tu_telem_stream_local_ip = "127.0.0.1"
-tu_telem_stream_local_port = 14560
-tu_telem_stream_remote_ip = tu_vehicle_ip
-tu_telem_stream_remote_port = 10000
+tu_telem_stream_ip = "127.0.0.1"
+tu_telem_stream_port_control = 10010
+tu_telem_stream_port_screen = 20010
+tu_telem_stream_port_interop = 30010
 
 # settings for judge server
-tu_judge_server_ip = "127.0.0.25"
+tu_judge_server_ip = "0.0.0.0"
 tu_judge_server_port = 5000
+
+# settings for credentials
+tu_credential_user_name = "TestUcusu"
+tu_credential_user_password = "ZurnaGonnaGetYouDown"
