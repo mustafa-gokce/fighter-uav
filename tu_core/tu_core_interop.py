@@ -41,7 +41,7 @@ tu_logger.logger.info("judge server login status: " + str(tu_vehicle.judge.logge
 time.sleep(5)
 pprint.pprint(tu_vehicle.__dict__())
 
-# connect to the judge server
+# disconnect to the judge server
 tu_vehicle.server_logout()
 
 # log the judge server connection

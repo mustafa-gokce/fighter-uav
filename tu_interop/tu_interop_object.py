@@ -1,16 +1,153 @@
 import math
 import threading
 import datetime
+import subprocess
 import logging
 import requests
 import pymavlink.mavutil as utility
 import pymavlink.dialects.v20.all as dialect
-
 import tu_settings
 import tu_interop.tu_interop_compat as tu_interop_compat
 
 
+class DevOps:
+    """
+    devops class
+    """
+
+    def __init__(self):
+        self.__git_hash_long = subprocess.check_output(["git", "rev-parse", "HEAD"]).decode("ascii").strip()
+        self.__git_hash_short = subprocess.check_output(["git", "rev-parse", "--short", "HEAD"]).decode("ascii").strip()
+
+    @property
+    def git_hash_long(self):
+        """
+        get git hash long
+
+        :return: str
+        """
+
+        # return to long hash
+        return self.__git_hash_long
+
+    @property
+    def git_hash_short(self):
+        """
+        get git hash short
+
+        :return: str
+        """
+
+        # return to short has
+        return self.__git_hash_short
+
+
+class Competition:
+    """
+    competition class
+    """
+
+    def __init__(self):
+        self.__day = tu_settings.tu_competition_day
+        self.__round = tu_settings.tu_competition_round
+
+    @property
+    def day(self):
+        """
+        get competition day
+
+        :return: int
+        """
+
+        # return to competition day
+        return self.__day
+
+    @property
+    def day_name(self):
+        """
+        get competition day name
+
+        :return: str
+        """
+
+        # return to competition day name
+        return "day {0}".format(self.day)
+
+    @property
+    def round_local(self):
+        """
+        get local round
+
+        :return: int
+        """
+
+        # return to local round
+        return self.__round
+
+    @property
+    def round_local_name(self):
+        """
+        get local round name
+
+        :return: str
+        """
+
+        # return to local round name
+        return "round {0}".format(self.round_local)
+
+    @property
+    def round_global(self):
+        """
+        get global round
+
+        :return: int
+        """
+
+        # return to global round
+        return (self.day - 1) * 2 + self.round_local
+
+    @property
+    def round_global_name(self):
+        """
+        get global round name
+
+        :return: str
+        """
+
+        # return to global round name
+        return "round {0}".format(self.round_global)
+
+    def __dict__(self):
+        """
+        devops class dictionary
+
+        :return: dict
+        """
+
+        # return to devops dictionary
+        return {"day": self.day,
+                "day_name": self.day_name,
+                "round_local": self.round_local,
+                "round_local_name": self.round_local_name,
+                "round_global": self.round_global,
+                "round_global_name": self.round_global_name}
+
+    def __str__(self):
+        """
+        devops class dictionary string
+
+        :return: dict
+        """
+
+        # return to devops dictionary string
+        return str(self.__dict__())
+
+
 class Time:
+    """
+    time class
+    """
+
     def __init__(self):
         self.__hour = 0
         self.__minute = 0
@@ -19,63 +156,157 @@ class Time:
 
     @property
     def hour(self):
+        """
+        get hour
+
+        :return: int
+        """
+
+        # expose hour attribute
         return self.__hour
 
     @property
     def minute(self):
+        """
+        get minute
+
+        :return: int
+        """
+
+        # expose minute attribute
         return self.__minute
 
     @property
     def second(self):
+        """
+        get second
+
+        :return: int
+        """
+
+        # expose second attribute
         return self.__second
 
     @property
     def millisecond(self):
+        """
+        get millisecond
+
+        :return: int
+        """
+
+        # expose millisecond attribute
         return self.__millisecond
 
     @hour.setter
     def hour(self, hour: int):
+        """
+        set hour
+
+        :param hour: int
+        :return: None
+        """
+
+        # hour can be int or float
         if type(hour) not in (int, float):
             raise TypeError
+
+        # hour should be a reasonable number
         if not 0 <= hour < 24:
             raise ValueError
+
+        # set hour attribute
         self.__hour = int(hour)
 
     @minute.setter
     def minute(self, minute: int):
+        """
+        set minute
+
+        :param minute: int
+        :return: None
+        """
+
+        # minute can be int or float
         if type(minute) not in (int, float):
             raise TypeError
+
+        # minute should be a reasonable number
         if not 0 <= minute < 60:
             raise ValueError
+
+        # set minute attribute
         self.__minute = int(minute)
 
     @second.setter
     def second(self, second: int):
+        """
+        set second
+
+        :param second: int
+        :return: None
+        """
+
+        # second can be int or float
         if type(second) not in (int, float):
             raise TypeError
+
+        # second should be a reasonable number
         if not 0 <= second < 60:
             raise ValueError
+
+        # set second attribute
         self.__second = int(second)
 
     @millisecond.setter
     def millisecond(self, millisecond: int):
+        """
+        set millisecond
+
+        :param millisecond: int
+        :return: None
+        """
+
+        # millisecond can be int or float
         if type(millisecond) not in (int, float):
             raise TypeError
+
+        # millisecond should be a reasonable number
         if not 0 <= millisecond < 1000:
             raise ValueError
+
+        # set second attribute
         self.__millisecond = int(millisecond)
 
     def __dict__(self):
+        """
+        time class dictionary
+
+        :return: dict
+        """
+
+        # get time class as dictionary
         return {"hour": self.hour,
                 "minute": self.minute,
                 "second": self.second,
                 "millisecond": self.millisecond}
 
     def __str__(self):
+        """
+        time class dictionary as string
+
+        :return: str
+        """
+
+        # get time class dictionary as string
         return str(self.__dict__())
 
 
 class Location:
+    """
+    location class
+    """
+
     def __init__(self):
         self.__latitude = 0.0
         self.__longitude = 0.0
@@ -83,48 +314,121 @@ class Location:
 
     @property
     def latitude(self):
+        """
+        get latitude
+
+        :return: float
+        """
+
+        # expose latitude attribute
         return self.__latitude
 
     @property
     def longitude(self):
+        """
+        get longitude
+
+        :return: float
+        """
+
+        # expose longitude attribute
         return self.__longitude
 
     @property
     def altitude(self):
+        """
+        get altitude
+
+        :return: float
+        """
+
+        # expose altitude attribute
         return self.__altitude
 
     @latitude.setter
     def latitude(self, latitude: float):
+        """
+        set latitude
+
+        :param latitude: float
+        :return: None
+        """
+
+        # latitude can be int or float
         if type(latitude) not in (int, float):
             raise TypeError
+
+        # latitude should be a reasonable number
         if not -90.0 <= latitude <= 90.0:
             raise ValueError
+
+        # set latitude attribute
         self.__latitude = float(latitude)
 
     @longitude.setter
     def longitude(self, longitude: float):
+        """
+        set longitude
+
+        :param longitude: float
+        :return: None
+        """
+
+        # longitude can be int or float
         if type(longitude) not in (int, float):
             raise TypeError
+
+        # longitude should be a reasonable number
         if not -180.0 <= longitude <= 180.0:
             raise ValueError
+
+        # set longitude attribute
         self.__longitude = float(longitude)
 
     @altitude.setter
     def altitude(self, altitude: float):
+        """
+        set altitude
+
+        :param altitude: float
+        :return: None
+        """
+
+        # altitude can be int or float
         if type(altitude) not in (int, float):
             raise TypeError
+
+        # set altitude attribute
         self.__altitude = float(altitude)
 
     def __dict__(self):
+        """
+        location class dictionary
+
+        :return: dict
+        """
+
+        # get location class as dictionary
         return {"latitude": self.latitude,
                 "longitude": self.longitude,
                 "altitude": self.altitude}
 
     def __str__(self):
+        """
+        location class dictionary as string
+
+        :return: str
+        """
+
+        # get location class dictionary as string
         return str(self.__dict__())
 
 
 class Attitude:
+    """
+    attitude class
+    """
+
     def __init__(self):
         self.__roll = 0.0
         self.__pitch = 0.0
@@ -132,46 +436,117 @@ class Attitude:
 
     @property
     def roll(self):
+        """
+        get roll angle
+
+        :return: float
+        """
+
+        # expose roll angle attribute
         return self.__roll
 
     @property
     def pitch(self):
+        """
+        get pitch angle
+
+        :return: float
+        """
+
+        # expose pitch angle attribute
         return self.__pitch
 
     @property
     def heading(self):
+        """
+        get heading
+
+        :return: float
+        """
+
+        # expose heading attribute
         return self.__heading
 
     @roll.setter
     def roll(self, roll: float):
+        """
+        set roll angle
+
+        :param roll: float
+        :return: None
+        """
+
+        # roll can be int or float
         if type(roll) not in (int, float):
             raise TypeError
+
+        # roll should be a reasonable number
         if not -180.0 <= roll <= 180.0:
             raise ValueError
+
+        # set roll attribute
         self.__roll = float(roll)
 
     @pitch.setter
     def pitch(self, pitch: float):
+        """
+        set pitch angle
+
+        :param pitch: float
+        :return: None
+        """
+
+        # pitch can be int or float
         if type(pitch) not in (int, float):
             raise TypeError
+
+        # pitch should be a reasonable number
         if not -180.0 <= pitch <= 180.0:
             raise ValueError
+
+        # set pitch attribute
         self.__pitch = float(pitch)
 
     @heading.setter
     def heading(self, heading: float):
+        """
+        set heading angle
+
+        :param heading: float
+        :return: None
+        """
+
+        # heading can be int or float
         if type(heading) not in (int, float):
             raise TypeError
+
+        # heading should be a reasonable number
         if not 0.0 <= heading <= 360.0:
             raise ValueError
+
+        # set heading attribute
         self.__heading = float(heading)
 
     def __dict__(self):
+        """
+        attitude class dictionary
+
+        :return: dict
+        """
+
+        # get attitude class as dictionary
         return {"roll": self.roll,
                 "pitch": self.pitch,
                 "heading": self.heading}
 
     def __str__(self):
+        """
+        attitude class dictionary as string
+
+        :return: str
+        """
+
+        # get attitude class dictionary as string
         return str(self.__dict__())
 
 
@@ -397,14 +772,14 @@ class Judge:
 
     def server_login(self):
 
-        while not self.__logged_in:
+        while not self.logged_in:
 
             if self.__server_connection is None:
                 urllib3_logger = logging.getLogger("urllib3")
                 urllib3_logger.setLevel(logging.CRITICAL)
                 self.__server_connection = requests.Session()
 
-            login_response = self.__server_connection.post(url=self.__path_login,
+            login_response = self.__server_connection.post(url=self.path_login,
                                                            headers={"Content-Type": "application/json"},
                                                            json=self.credential.dict_judge_credential)
             login_response = login_response.json()
@@ -414,13 +789,25 @@ class Judge:
 
     def server_logout(self):
 
-        while self.__logged_in:
+        while self.logged_in:
 
-            logout_response = self.__server_connection.get(url=self.__path_logout)
+            logout_response = self.__server_connection.get(url=self.path_logout)
             logout_response = logout_response.json()
 
             if logout_response.get("result", "failure") == "success":
                 self.__logged_in = False
+
+    def server_time_get(self):
+
+        if self.logged_in:
+            server_time_response = self.__server_connection.get(url=self.path_time)
+            server_time_response = server_time_response.json()
+
+            self.time.hour = int(server_time_response[tu_interop_compat.tu_interop_compat_time["hour"]["locale"]])
+            self.time.minute = int(server_time_response[tu_interop_compat.tu_interop_compat_time["minute"]["locale"]])
+            self.time.second = int(server_time_response[tu_interop_compat.tu_interop_compat_time["second"]["locale"]])
+            self.time.millisecond = int(
+                server_time_response[tu_interop_compat.tu_interop_compat_time["millisecond"]["locale"]])
 
     def __dict__(self):
         return {"time": self.time.__dict__(),
@@ -438,48 +825,6 @@ class Judge:
         return str(self.__dict__())
 
 
-class Competition:
-
-    def __init__(self):
-        self.__day = tu_settings.tu_competition_day
-        self.__round = tu_settings.tu_competition_round
-
-    @property
-    def day(self):
-        return self.__day
-
-    @property
-    def day_name(self):
-        return "day {0}".format(self.day)
-
-    @property
-    def round_local(self):
-        return self.__round
-
-    @property
-    def round_local_name(self):
-        return "round {0}".format(self.round_local)
-
-    @property
-    def round_global(self):
-        return (self.day - 1) * 2 + self.round_local
-
-    @property
-    def round_global_name(self):
-        return "round {0}".format(self.round_global)
-
-    def __dict__(self):
-        return {"day": self.day,
-                "day_name": self.day_name,
-                "round_local": self.round_local,
-                "round_local_name": self.round_local_name,
-                "round_global": self.round_global,
-                "round_global_name": self.round_global_name}
-
-    def __str__(self):
-        return str(self.__dict__())
-
-
 class Vehicle(BaseVehicle):
     def __init__(self):
         super().__init__()
@@ -487,13 +832,13 @@ class Vehicle(BaseVehicle):
         self.judge = Judge()
         self.competition = Competition()
         self.foe = Foe()
+        self.team = tu_settings.tu_credential_user_id
         self.__connected = False
         self.__speed = 0.0
         self.__battery = 0.0
         self.__auto = 0
         self.__mavlink = None
         self.__thread_telemetry_get = None
-        self.team = tu_settings.tu_credential_user_id
 
     @property
     def speed(self):
@@ -572,6 +917,9 @@ class Vehicle(BaseVehicle):
 
     def server_logout(self):
         self.judge.server_logout()
+
+    def server_time_get(self):
+        self.judge.server_time_get()
 
     def telemetry_connect(self):
         if self.__mavlink is None:
