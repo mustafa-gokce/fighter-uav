@@ -288,6 +288,11 @@ class Credential:
             raise ValueError
         self.__user_password = user_password
 
+    @property
+    def dict_judge_credential(self):
+        return {tu_interop_compat.tu_interop_compat_login["user_name"]["locale"]: self.user_name,
+                tu_interop_compat.tu_interop_compat_login["user_password"]["locale"]: self.user_password}
+
     def __dict__(self):
         return {"user_name": self.user_name,
                 "user_password": self.user_password}
@@ -339,17 +344,156 @@ class Foe(BaseVehicle):
         return str(self.__dict__())
 
 
+class Judge:
+    def __init__(self):
+        self.credential = Credential()
+        self.__time = Time()
+        self.__path_login = tu_interop_compat.tu_interop_compat_path_server_login
+        self.__path_logout = tu_interop_compat.tu_interop_compat_path_server_logout
+        self.__path_time = tu_interop_compat.tu_interop_compat_path_server_time
+        self.__path_send = tu_interop_compat.tu_interop_compat_path_server_send
+        self.__path_lock = tu_interop_compat.tu_interop_compat_path_server_lock
+        self.__logged_in = False
+        self.__allowed_interop = False
+        self.__foes = []
+        self.__server_connection = None
+        self.__server_connection_thread = None
+
+    @property
+    def time(self):
+        return self.__time
+
+    @property
+    def path_login(self):
+        return self.__path_login
+
+    @property
+    def path_logout(self):
+        return self.__path_logout
+
+    @property
+    def path_time(self):
+        return self.__path_time
+
+    @property
+    def path_send(self):
+        return self.__path_send
+
+    @property
+    def path_lock(self):
+        return self.__path_lock
+
+    @property
+    def logged_in(self):
+        return self.__logged_in
+
+    @property
+    def allowed_interop(self):
+        return self.__allowed_interop
+
+    @property
+    def foes(self):
+        return self.__foes
+
+    def server_login(self):
+
+        while not self.__logged_in:
+
+            if self.__server_connection is None:
+                urllib3_logger = logging.getLogger("urllib3")
+                urllib3_logger.setLevel(logging.CRITICAL)
+                self.__server_connection = requests.Session()
+
+            login_response = self.__server_connection.post(url=self.__path_login,
+                                                           headers={"Content-Type": "application/json"},
+                                                           json=self.credential.dict_judge_credential)
+            login_response = login_response.json()
+
+            if login_response.get("result", "failure") == "success":
+                self.__logged_in = True
+
+    def server_logout(self):
+
+        while self.__logged_in:
+
+            logout_response = self.__server_connection.get(url=self.__path_logout)
+            logout_response = logout_response.json()
+
+            if logout_response.get("result", "failure") == "success":
+                self.__logged_in = False
+
+    def __dict__(self):
+        return {"time": self.time.__dict__(),
+                "credential": self.credential.__dict__(),
+                "path_login": self.path_login,
+                "path_logout": self.path_logout,
+                "path_time": self.path_time,
+                "path_send": self.path_send,
+                "path_lock": self.path_lock,
+                "logged_in": self.logged_in,
+                "allowed_interop": self.allowed_interop,
+                "foes": [foe.__dict__() for foe in self.foes]}
+
+    def __str__(self):
+        return str(self.__dict__())
+
+
+class Competition:
+
+    def __init__(self):
+        self.__day = tu_settings.tu_competition_day
+        self.__round = tu_settings.tu_competition_round
+
+    @property
+    def day(self):
+        return self.__day
+
+    @property
+    def day_name(self):
+        return "day {0}".format(self.day)
+
+    @property
+    def round_local(self):
+        return self.__round
+
+    @property
+    def round_local_name(self):
+        return "round {0}".format(self.round_local)
+
+    @property
+    def round_global(self):
+        return (self.day - 1) * 2 + self.round_local
+
+    @property
+    def round_global_name(self):
+        return "round {0}".format(self.round_global)
+
+    def __dict__(self):
+        return {"day": self.day,
+                "day_name": self.day_name,
+                "round_local": self.round_local,
+                "round_local_name": self.round_local_name,
+                "round_global": self.round_global,
+                "round_global_name": self.round_global_name}
+
+    def __str__(self):
+        return str(self.__dict__())
+
+
 class Vehicle(BaseVehicle):
     def __init__(self):
         super().__init__()
         self.target = Target()
-        self.credential = Credential()
+        self.judge = Judge()
+        self.competition = Competition()
         self.foe = Foe()
+        self.__connected = False
         self.__speed = 0.0
         self.__battery = 0.0
         self.__auto = 0
         self.__mavlink = None
-        self.__get_telemetry_thread = None
+        self.__thread_telemetry_get = None
+        self.team = tu_settings.tu_credential_user_id
 
     @property
     def speed(self):
@@ -363,30 +507,12 @@ class Vehicle(BaseVehicle):
     def auto(self):
         return self.__auto
 
-    @speed.setter
-    def speed(self, speed: float):
-        if type(speed) not in (int, float):
-            raise TypeError
-        self.__speed = float(speed)
-
-    @battery.setter
-    def battery(self, battery: float):
-        if type(battery) not in (int, float):
-            raise TypeError
-        if not 0.0 <= battery <= 100.0:
-            raise ValueError
-        self.__battery = float(battery)
-
-    @auto.setter
-    def auto(self, auto: int):
-        if type(auto) != int:
-            raise TypeError
-        if auto not in (0, 1):
-            raise ValueError
-        self.__auto = auto
+    @property
+    def connected(self):
+        return self.__connected
 
     @property
-    def dict_judge_telemetry(self):
+    def __dict_judge_telemetry(self):
         return {tu_interop_compat.tu_interop_compat_send["team"]["locale"]: self.team,
                 tu_interop_compat.tu_interop_compat_send["latitude"]["locale"]: self.location.latitude,
                 tu_interop_compat.tu_interop_compat_send["longitude"]["locale"]: self.location.longitude,
@@ -409,7 +535,7 @@ class Vehicle(BaseVehicle):
                     tu_interop_compat.tu_interop_compat_time["millisecond"]["locale"]: self.time.millisecond}}
 
     @property
-    def dict_judge_lock(self):
+    def __dict_judge_lock(self):
         return {tu_interop_compat.tu_interop_compat_lock["lock_auto"]["locale"]: self.auto,
                 tu_interop_compat.tu_interop_compat_lock["lock_start"]["locale"]: {
                     tu_interop_compat.tu_interop_compat_time["hour"]["locale"]: self.target.time_start.hour,
@@ -424,17 +550,14 @@ class Vehicle(BaseVehicle):
                     tu_interop_compat.tu_interop_compat_time["millisecond"][
                         "locale"]: self.target.time_end.millisecond}}
 
-    @property
-    def dict_judge_login(self):
-        return {tu_interop_compat.tu_interop_compat_login["user_name"]["locale"]: self.credential.user_name,
-                tu_interop_compat.tu_interop_compat_login["user_password"]["locale"]: self.credential.user_password}
-
     def __dict__(self):
-        return {"time": self.time.__dict__(),
+        return {"connected": self.connected,
+                "time": self.time.__dict__(),
                 "location": self.location.__dict__(),
                 "attitude": self.attitude.__dict__(),
                 "target": self.target.__dict__(),
-                "credential": self.credential.__dict__(),
+                "judge": self.judge.__dict__(),
+                "competition": self.competition.__dict__(),
                 "foe": self.foe.__dict__(),
                 "team": self.team,
                 "speed": self.speed,
@@ -444,20 +567,26 @@ class Vehicle(BaseVehicle):
     def __str__(self):
         return str(self.__dict__())
 
-    def connect_telemetry(self):
+    def server_login(self):
+        self.judge.server_login()
+
+    def server_logout(self):
+        self.judge.server_logout()
+
+    def telemetry_connect(self):
         if self.__mavlink is None:
             connection_string = "{0}:{1}".format(tu_settings.tu_telem_stream_ip,
                                                  tu_settings.tu_telem_stream_port_interop)
             self.__mavlink = utility.mavlink_connection(connection_string)
             self.__mavlink.wait_heartbeat()
+            self.__connected = True
+            self.__stream_rate_set()
 
-            self.__mavlink_stream_rate_set()
+            if self.__thread_telemetry_get is None:
+                self.__thread_telemetry_get = threading.Thread(target=self.__telemetry_get)
+                self.__thread_telemetry_get.start()
 
-            if self.__get_telemetry_thread is None:
-                self.__get_telemetry_thread = threading.Thread(target=self.__get_telemetry)
-                self.__get_telemetry_thread.start()
-
-    def __mavlink_stream_rate_set(self):
+    def __stream_rate_set(self):
 
         def stream_rate_set_message(target_system, target_component, message_id, message_frequency):
             return dialect.MAVLink_command_long_message(target_system=target_system,
@@ -486,7 +615,8 @@ class Vehicle(BaseVehicle):
                           dialect.MAVLINK_MSG_ID_SYSTEM_TIME):
             stream_rate_set(message_id=stream_id, message_frequency=5)
 
-    def __get_telemetry(self):
+    def __telemetry_get(self):
+
         while True:
 
             message = self.__mavlink.recv_msg()
@@ -497,154 +627,30 @@ class Vehicle(BaseVehicle):
             message = message.to_dict()
 
             if message["mavpackettype"] == dialect.MAVLink_global_position_int_message.name:
+
                 self.location.latitude = message["lat"] * 1e-7
                 self.location.longitude = message["lon"] * 1e-7
                 self.location.altitude = message["relative_alt"] * 1e-3
                 self.attitude.heading = message["hdg"] * 1e-2
 
             elif message["mavpackettype"] == dialect.MAVLink_attitude_message.name:
+
                 self.attitude.roll = math.degrees(message["roll"])
                 self.attitude.pitch = math.degrees(message["pitch"])
 
             elif message["mavpackettype"] == dialect.MAVLink_vfr_hud_message.name:
-                self.speed = message["groundspeed"]
+
+                self.__speed = message["groundspeed"]
 
             elif message["mavpackettype"] == dialect.MAVLink_sys_status_message.name:
-                self.battery = message["battery_remaining"]
+
+                self.__battery = message["battery_remaining"]
 
             elif message["mavpackettype"] == dialect.MAVLink_system_time_message.name:
+
                 unix_time = message["time_unix_usec"]
                 unix_time = datetime.datetime.utcfromtimestamp(unix_time * 1e-6)
                 self.time.hour = unix_time.hour
                 self.time.minute = unix_time.minute
                 self.time.second = unix_time.second
                 self.time.millisecond = int(unix_time.microsecond * 1e-3)
-
-
-class Judge:
-    def __init__(self):
-        self.__time = Time()
-        self.__path_login = tu_interop_compat.tu_interop_compat_path_server_login
-        self.__path_logout = tu_interop_compat.tu_interop_compat_path_server_logout
-        self.__path_time = tu_interop_compat.tu_interop_compat_path_server_time
-        self.__path_send = tu_interop_compat.tu_interop_compat_path_server_send
-        self.__path_lock = tu_interop_compat.tu_interop_compat_path_server_lock
-        self.__connected = False
-        self.__allowed = False
-        self.__foes = []
-        self.__connection = None
-        self.__connection_thread = None
-
-    @property
-    def time(self):
-        return self.__time
-
-    @property
-    def path_login(self):
-        return self.__path_login
-
-    @property
-    def path_logout(self):
-        return self.__path_logout
-
-    @property
-    def path_time(self):
-        return self.__path_time
-
-    @property
-    def path_send(self):
-        return self.__path_send
-
-    @property
-    def path_lock(self):
-        return self.__path_lock
-
-    @property
-    def connected(self):
-        return self.__connected
-
-    @property
-    def allowed(self):
-        return self.__allowed
-
-    @property
-    def foes(self):
-        return self.__foes
-
-    def connect_server(self, vehicle=Vehicle()):
-
-        self.__connected = False
-        self.__connection = None
-
-        while not self.__connected:
-
-            if self.__connection is None:
-
-                urllib3_logger = logging.getLogger("urllib3")
-                urllib3_logger.setLevel(logging.CRITICAL)
-                self.__connection = requests.Session()
-
-            login_response = self.__connection.post(url=self.__path_login,
-                                                    headers={"Content-Type": "application/json"},
-                                                    json=vehicle.dict_judge_login)
-            login_response = login_response.json()
-
-            if "result" in login_response.keys():
-                if login_response["result"] == "success":
-                    self.__connected = True
-
-    def __dict__(self):
-        return {"time": self.time.__dict__(),
-                "path_login": self.path_login,
-                "path_logout": self.path_logout,
-                "path_time": self.path_time,
-                "path_send": self.path_send,
-                "path_lock": self.path_lock,
-                "connected": self.connected,
-                "allowed": self.allowed,
-                "foes": [foe.__dict__() for foe in self.foes]}
-
-    def __str__(self):
-        return str(self.__dict__())
-
-
-class Competition:
-
-    def __init__(self):
-        self.__day = tu_settings.tu_competition_day
-        self.__round = tu_settings.tu_competition_round
-
-    @property
-    def day(self):
-        return self.__day
-
-    @property
-    def day_name(self):
-        return "day: {0}".format(self.day)
-
-    @property
-    def round_local(self):
-        return self.__round
-
-    @property
-    def round_local_name(self):
-        return "round: {0}".format(self.round_local)
-
-    @property
-    def round_global(self):
-        return (self.day - 1) * 2 + self.round_local
-
-    @property
-    def round_global_name(self):
-        return "round: {0}".format(self.round_global)
-
-    def __dict__(self):
-        return {"day": self.day,
-                "day_name": self.day_name,
-                "round_local": self.round_local,
-                "round_local_name": self.round_local_name,
-                "round_global": self.round_global,
-                "round_global_name": self.round_global_name}
-
-    def __str__(self):
-        return str(self.__dict__())

@@ -31,5 +31,6 @@ tu_judge_server_ip = "0.0.0.0"
 tu_judge_server_port = 5000
 
 # settings for credentials
+tu_credential_user_id = 26
 tu_credential_user_name = "TestUcusu"
 tu_credential_user_password = "ZurnaGonnaGetYouDown"
