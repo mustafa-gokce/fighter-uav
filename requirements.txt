@@ -16,3 +16,4 @@ scipy
 simplejpeg
 simplejson
 wrapt_timeout_decorator
+requests
