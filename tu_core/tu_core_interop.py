@@ -1,4 +1,7 @@
+import os
+import signal
 import time
+import pprint
 import tu_log.tu_log_object
 import tu_interop.tu_interop_object
 
@@ -17,32 +20,32 @@ tu_logger.logger.info("competition info: {0} {1}".format(tu_competition.day_name
 # get the vehicle
 tu_vehicle = tu_interop.tu_interop_object.Vehicle()
 
-# get the judge
-tu_judge = tu_interop.tu_interop_object.Judge()
-
 # log the vehicle connection
-tu_logger.logger.info("trying to connect to vehicle")
+tu_logger.logger.info("vehicle telemetry connection status: " + str(tu_vehicle.connected))
 
 # connect to the vehicle
-tu_vehicle.connect_telemetry()
+tu_vehicle.telemetry_connect()
 
 # log the vehicle connection
-tu_logger.logger.info("connected to vehicle")
+tu_logger.logger.info("vehicle telemetry connection status: " + str(tu_vehicle.connected))
 
 # log the judge server connection
-tu_logger.logger.info("trying to connect to judge server")
+tu_logger.logger.info("judge server login status: " + str(tu_vehicle.judge.logged_in))
 
 # connect to the judge server
-tu_judge.connect_server(vehicle=tu_vehicle)
+tu_vehicle.server_login()
 
 # log the judge server connection
-tu_logger.logger.info("connected to judge server")
+tu_logger.logger.info("judge server login status: " + str(tu_vehicle.judge.logged_in))
 
-# vehicle core event loop
-while True:
+time.sleep(5)
+pprint.pprint(tu_vehicle.__dict__())
 
-    # debug the vehicle
-    print(tu_vehicle.location.__dict__())
+# connect to the judge server
+tu_vehicle.server_logout()
 
-    # vehicle core event loop cooldown delay
-    time.sleep(1)
+# log the judge server connection
+tu_logger.logger.info("judge server login status: " + str(tu_vehicle.judge.logged_in))
+
+# forcefully kill the threads and exit
+os.kill(os.getpid(), signal.SIGTERM)
