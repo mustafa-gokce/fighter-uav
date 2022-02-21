@@ -42,6 +42,12 @@ while True:
                                 image=my_image,
                                 data=my_data)
 
+    # change color space if testing
+    if tu_settings.tu_video_stream_test:
+
+        # convert image to RGB
+        my_image = cv2.cvtColor(my_image, cv2.COLOR_BGR2RGB)
+
     # send image frame to judge sink
     judge_sink.schedule_frame(my_image)
 
