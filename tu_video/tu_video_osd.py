@@ -1,6 +1,8 @@
-import time
+import datetime
 import cv2
-import tu_video_utils
+import pyfakewebcam
+import tu_video_util
+import tu_telem.tu_telem_object
 import tu_settings
 
 # drawing related settings
@@ -15,87 +17,88 @@ osd_font_color = (0, 255, 0)
 osd_font_thickness = 2
 osd_font_line_type = cv2.LINE_AA
 
-# create sub socket
-sub_socket = tu_video_utils.tu_video_create_sub(ip=tu_settings.tu_video_stream_ip_local,
-                                                port=tu_settings.tu_video_stream_port_local_raw)
+# create dummy sink for judge server streaming
+sink_osd = pyfakewebcam.FakeWebcam(video_device=tu_settings.tu_video_stream_port_local_osd,
+                                   width=tu_settings.tu_video_stream_width,
+                                   height=tu_settings.tu_video_stream_height)
 
-# create pub socket
-pub_socket = tu_video_utils.tu_video_create_pub(ip=tu_settings.tu_video_stream_ip_local,
-                                                port=tu_settings.tu_video_stream_port_local_osd)
+# create capture device
+capture_device = tu_video_util.capture_device_create(port=tu_settings.tu_video_stream_port_local_raw)
 
-# loop related variables
-loop_count = 0
-time_initial = 0
-time_receive = 0
-time_plot = 0
-time_publish = 0
-time_delta_loop = 0
-time_delta_receive = 0
-time_delta_plot = 0
-time_delta_publish = 0
-fps_loop = 0
-fps_receive = 0
-fps_plot = 0
-fps_publish = 0
+# create telemetry receiver
+telemetry_receiver = tu_telem.tu_telem_object.Receiver()
 
 # do below always
 while True:
 
-    # initial time
-    time_initial = time.time()
+    # try to do below
+    try:
 
-    # receive video stream from source
-    my_data, my_image = tu_video_utils.tu_video_sub(socket=sub_socket)
+        # get time
+        current_date = str(datetime.datetime.now())[:10:]
 
-    # time after receiving a frame
-    time_receive = time.time()
+        # get telemetry data
+        telemetry_data = telemetry_receiver.telemetry_get
 
-    # manipulate data
-    my_data["osd_loop_count"] = loop_count
-    my_data["osd_time_initial"] = time_initial
-    my_data["osd_time_receive"] = time_receive
-    my_data["osd_time_plot"] = time_plot
-    my_data["osd_time_publish"] = time_publish
-    my_data["osd_time_delta_loop"] = time_delta_loop
-    my_data["osd_time_delta_receive"] = time_delta_receive
-    my_data["osd_time_delta_plot"] = time_delta_plot
-    my_data["osd_time_delta_publish"] = time_delta_publish
-    my_data["osd_fps_loop"] = fps_loop
-    my_data["osd_fps_receive"] = fps_receive
-    my_data["osd_fps_plot"] = fps_plot
-    my_data["osd_fps_publish"] = fps_publish
+        # process received telemetry data for stamping
+        current_time = "{0:02d}:{1:02d}:{2:02d}.{3:03d}".format(telemetry_data["time"]["hour"],
+                                                                telemetry_data["time"]["minute"],
+                                                                telemetry_data["time"]["second"],
+                                                                telemetry_data["time"]["millisecond"])
+        current_latitude = "LAT: {0:.6f}".format(telemetry_data["location"]["latitude"])
+        current_longitude = "LON: {0:.6f}".format(telemetry_data["location"]["longitude"])
+        current_altitude = "ALT: {0:.2f}".format(telemetry_data["location"]["altitude"])
+        current_roll = "RLL: {0:.2f}".format(telemetry_data["attitude"]["roll"])
+        current_pitch = "PIT: {0:.2f}".format(telemetry_data["attitude"]["pitch"])
+        current_heading = "HDG: {0:.2f}".format(telemetry_data["attitude"]["heading"])
+        current_speed = "SPD: {0:.2f}".format(telemetry_data["speed"])
+        current_battery = "BAT: {0:.2f}".format(telemetry_data["battery"])
 
-    # manipulate frame
-    my_image = cv2.rectangle(my_image, hit_area_top_left, hit_area_bottom_right, hit_area_color, hit_area_thickness)
-    my_image = cv2.putText(my_image, "{0:07d}".format(loop_count), (5, 30),
-                           osd_font, osd_font_scale, osd_font_color, osd_font_thickness, osd_font_line_type)
-    my_image = cv2.putText(my_image, "FPS:" + str(fps_receive), (5, 60),
-                           osd_font, osd_font_scale, osd_font_color, osd_font_thickness, osd_font_line_type)
-    my_image = cv2.putText(my_image, "TEST UCUSU", (5, 710),
-                           osd_font, osd_font_scale, osd_font_color, osd_font_thickness, osd_font_line_type)
-    my_image = cv2.putText(my_image, "TEKNOFEST 2022", (1005, 710),
-                           osd_font, osd_font_scale, osd_font_color, osd_font_thickness, osd_font_line_type)
+        # get the image frame
+        my_success, my_image = capture_device.read()
 
-    # time after plotting osd
-    time_plot = time.time()
+        # check frame capture was successful
+        if my_success:
 
-    # publish video stream to endpoints
-    tu_video_utils.tu_video_pub(socket=pub_socket,
-                                image=my_image,
-                                data=my_data)
+            # check image
+            if tu_video_util.is_valid_image(my_image):
 
-    # time after publishing to remote
-    time_publish = time.time()
+                # manipulate frame
+                my_image = cv2.rectangle(my_image, hit_area_top_left, hit_area_bottom_right, hit_area_color,
+                                         hit_area_thickness)
+                my_image = cv2.putText(my_image, current_date, (5, 30),
+                                       osd_font, osd_font_scale, osd_font_color, osd_font_thickness, osd_font_line_type)
+                my_image = cv2.putText(my_image, current_time, (5, 60),
+                                       osd_font, osd_font_scale, osd_font_color, osd_font_thickness, osd_font_line_type)
+                my_image = cv2.putText(my_image, current_latitude, (5, 120),
+                                       osd_font, osd_font_scale, osd_font_color, osd_font_thickness, osd_font_line_type)
+                my_image = cv2.putText(my_image, current_longitude, (5, 150),
+                                       osd_font, osd_font_scale, osd_font_color, osd_font_thickness, osd_font_line_type)
+                my_image = cv2.putText(my_image, current_altitude, (5, 180),
+                                       osd_font, osd_font_scale, osd_font_color, osd_font_thickness, osd_font_line_type)
+                my_image = cv2.putText(my_image, current_roll, (5, 240),
+                                       osd_font, osd_font_scale, osd_font_color, osd_font_thickness, osd_font_line_type)
+                my_image = cv2.putText(my_image, current_pitch, (5, 270),
+                                       osd_font, osd_font_scale, osd_font_color, osd_font_thickness, osd_font_line_type)
+                my_image = cv2.putText(my_image, current_heading, (5, 300),
+                                       osd_font, osd_font_scale, osd_font_color, osd_font_thickness, osd_font_line_type)
+                my_image = cv2.putText(my_image, current_speed, (5, 360),
+                                       osd_font, osd_font_scale, osd_font_color, osd_font_thickness, osd_font_line_type)
+                my_image = cv2.putText(my_image, current_battery, (5, 390),
+                                       osd_font, osd_font_scale,osd_font_color, osd_font_thickness, osd_font_line_type)
+                my_image = cv2.putText(my_image, "TEST UCUSU", (5, 710),
+                                       osd_font, osd_font_scale, osd_font_color, osd_font_thickness, osd_font_line_type)
+                my_image = cv2.putText(my_image, "TEKNOFEST 2022", (1005, 710),
+                                       osd_font, osd_font_scale, osd_font_color, osd_font_thickness, osd_font_line_type)
 
-    # calculate time delta
-    time_delta_loop = time_publish - time_initial
-    time_delta_receive = time_receive - time_initial
-    time_delta_plot = time_plot - time_receive
-    time_delta_publish = time_publish - time_receive
-    fps_loop = int(time_delta_loop and 1.0 / time_delta_loop or 0)
-    fps_receive = int(time_delta_receive and 1.0 / time_delta_receive or 0)
-    fps_plot = int(time_delta_plot and 1.0 / time_delta_plot or 0)
-    fps_publish = int(time_delta_publish and 1.0 / time_delta_publish or 0)
+                # change color space if testing
+                if tu_settings.tu_video_stream_test:
+                    # convert image to RGB
+                    my_image = cv2.cvtColor(my_image, cv2.COLOR_BGR2RGB)
 
-    # update loop counter
-    loop_count += 1
+                # send image frame to judge sink
+                sink_osd.schedule_frame(my_image)
+
+    # catch all exceptions
+    except Exception as e:
+        pass

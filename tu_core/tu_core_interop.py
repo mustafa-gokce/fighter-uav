@@ -1,11 +1,9 @@
-import os
-import signal
-import time
-import pprint
 import tu_log.tu_log_object
 import tu_interop.tu_interop_object
 
 # get the logger
+import tu_settings
+
 tu_logger = tu_log.tu_log_object.Logger(name="tu_core_interop")
 
 # log the script has started
@@ -24,28 +22,8 @@ tu_vehicle = tu_interop.tu_interop_object.Vehicle()
 tu_logger.logger.info("vehicle telemetry connection status: " + str(tu_vehicle.connected))
 
 # connect to the vehicle
-tu_vehicle.telemetry_connect()
+tu_vehicle.telemetry_connect(ip=tu_settings.tu_telem_stream_ip,
+                             port=tu_settings.tu_telem_stream_port_interop)
 
 # log the vehicle connection
 tu_logger.logger.info("vehicle telemetry connection status: " + str(tu_vehicle.connected))
-
-# log the judge server connection
-tu_logger.logger.info("judge server login status: " + str(tu_vehicle.judge.logged_in))
-
-# connect to the judge server
-tu_vehicle.server_login()
-
-# log the judge server connection
-tu_logger.logger.info("judge server login status: " + str(tu_vehicle.judge.logged_in))
-
-time.sleep(5)
-pprint.pprint(tu_vehicle.__dict__())
-
-# disconnect to the judge server
-tu_vehicle.server_logout()
-
-# log the judge server connection
-tu_logger.logger.info("judge server login status: " + str(tu_vehicle.judge.logged_in))
-
-# forcefully kill the threads and exit
-os.kill(os.getpid(), signal.SIGTERM)
