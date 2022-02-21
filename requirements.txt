@@ -17,3 +17,5 @@ simplejpeg
 simplejson
 wrapt_timeout_decorator
 requests
+Pillow
+pyfakewebcam
