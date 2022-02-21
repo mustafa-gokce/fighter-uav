@@ -1,5 +1,6 @@
 import sys
 import cv2
+import pyfakewebcam
 import tu_video_utils
 import tu_settings
 
@@ -17,6 +18,11 @@ sub_socket = tu_video_utils.tu_video_create_sub(ip=tu_settings.tu_video_stream_i
 # create pub socket
 pub_socket = tu_video_utils.tu_video_create_pub(ip=tu_settings.tu_video_stream_ip_local,
                                                 port=tu_settings.tu_video_stream_port_local_judge)
+
+# create dummy sink for judge server streaming
+judge_sink = pyfakewebcam.FakeWebcam(video_device="/dev/video26",
+                                     width=tu_settings.tu_video_stream_width,
+                                     height=tu_settings.tu_video_stream_height)
 
 # do below always
 loop_count = 0
@@ -36,8 +42,8 @@ while True:
                                 image=my_image,
                                 data=my_data)
 
-    # to judge server
-    sys.stdout.buffer.write(my_image.tobytes())
+    # send image frame to judge sink
+    judge_sink.schedule_frame(my_image)
 
     # update loop counter
     loop_count += 1
