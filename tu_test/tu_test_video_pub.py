@@ -41,6 +41,9 @@ class StreamingHandler(http.server.BaseHTTPRequestHandler):
                     if not success:
                         continue
 
+                    # convert image to RGB
+                    image_frame = cv2.cvtColor(image_frame, cv2.COLOR_BGR2RGB)
+
                     # convert image frame from numpy array to PIL JPEG object
                     jpg = PIL.Image.fromarray(image_frame)
 

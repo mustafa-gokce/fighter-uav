@@ -5,3 +5,5 @@
 # sudo apt-get install v4l2loopback-utils
 # sudo modprobe v4l2loopback devices=1
 # ffplay /dev/video26
+# sudo modprobe v4l2loopback video_nr=26 card_label="Test Ucusu Judge Stream" exclusive_caps=1
+# v4l2-ctl --list-devices
