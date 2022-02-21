@@ -1,9 +1,13 @@
 import threading
 import datetime
+import logging
+import time
+import requests
 import numpy
 import cv2
 import dearpygui.dearpygui as dearpygui
-import tu_video.tu_video_utils as tu_video_utils
+import tu_video.tu_video_util
+import tu_telem.tu_telem_object
 import tu_settings
 
 # global variables
@@ -15,6 +19,7 @@ video_streams = {
     "tu_video_osd_frame": tu_settings.tu_video_stream_port_local_osd
 }
 video_stream_threads = []
+telemetry_stream_thread = None
 
 
 # get current date and time
@@ -47,36 +52,62 @@ def receive_video_stream(video_stream_port, video_stream_name):
     # get global variables
     global stop_threads
 
-    # create socket
-    sub_socket = tu_video_utils.tu_video_create_sub(tu_settings.tu_video_stream_ip_local, video_stream_port)
+    # create capture device
+    capture_device = tu_video.tu_video_util.capture_device_create(video_stream_port)
 
     # do below always
     while True:
 
         # get the contents
-        my_data, my_image = tu_video_utils.tu_video_sub(sub_socket)
+        my_success, my_image = capture_device.read()
 
-        # resize received image
-        my_image = cv2.resize(my_image, (640, 360), interpolation=cv2.INTER_AREA)
+        # check frame capture was successful
+        if my_success:
 
-        # change color space from BGR to RGB of the received image
-        my_image = numpy.flip(my_image, 2)
+            # check image
+            if tu_video.tu_video_util.is_valid_image(my_image):
+                # resize received image
+                my_image = cv2.resize(my_image, (640, 360), interpolation=cv2.INTER_AREA)
 
-        # ravel the image
-        my_image = my_image.ravel()
+                # change color space from BGR to RGB of the received image
+                my_image = numpy.flip(my_image, 2)
 
-        # create float array for GPU acceleration benefit of interface
-        my_image = numpy.asfarray(my_image, dtype="f")
+                # ravel the image
+                my_image = my_image.ravel()
 
-        # create texture to be shown on interface
-        texture_data = numpy.true_divide(my_image, 255.0)
+                # create float array for GPU acceleration benefit of interface
+                my_image = numpy.asfarray(my_image, dtype="f")
 
-        # update texture
-        dearpygui.set_value(video_stream_name, texture_data)
+                # create texture to be shown on interface
+                texture_data = numpy.true_divide(my_image, 255.0)
+
+                # update texture
+                dearpygui.set_value(video_stream_name, texture_data)
 
         # kill the thread if user wanted exit
         if stop_threads >= 5:
             break
+
+
+def receive_telemetry_stream():
+    # get global variables
+    global stop_threads
+
+    # create telemetry receiver
+    telemetry_receiver = tu_telem.tu_telem_object.Receiver()
+
+    # do below always
+    while True:
+
+        # update telemetry data related fields
+        pass
+
+        # kill the thread if user wanted exit
+        if stop_threads >= 5:
+            break
+
+        # cool down the update rate
+        time.sleep(0.2)
 
 
 # flight mode change callback
@@ -236,7 +267,8 @@ dearpygui.show_viewport()
 # for each stream visualization request
 for i, stream_name in enumerate(video_streams.keys()):
     # create stream fetch thread
-    video_stream_thread = threading.Thread(target=receive_video_stream, args=(video_streams[stream_name], stream_name))
+    video_stream_thread = threading.Thread(target=receive_video_stream,
+                                           args=(video_streams[stream_name], stream_name))
 
     # start stream fetch thread
     video_stream_thread.start()
@@ -246,6 +278,10 @@ for i, stream_name in enumerate(video_streams.keys()):
 
     # log messages
     log_writer("DEBUG", context="PANEL", message="Started thread: " + stream_name)
+
+# start telemetry stream thread
+telemetry_stream_thread = threading.Thread(target=receive_telemetry_stream)
+telemetry_stream_thread.start()
 
 # while interface is running
 while dearpygui.is_dearpygui_running():

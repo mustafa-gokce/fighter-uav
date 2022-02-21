@@ -1,3 +1,4 @@
+import time
 import math
 import threading
 import datetime
@@ -943,7 +944,7 @@ class Judge:
         self.__logged_in = False
         self.__allowed_interop = False
         self.__foes = []
-        self.__server_connection = None
+        self.__judge_connection = None
         self.__server_connection_thread = None
 
     @property
@@ -1057,26 +1058,32 @@ class Judge:
         while not self.logged_in:
 
             # if there is no connection
-            if self.__server_connection is None:
-
+            if self.__judge_connection is None:
                 # silence the requests library
                 urllib3_logger = logging.getLogger("urllib3")
                 urllib3_logger.setLevel(logging.CRITICAL)
 
                 # create a session
-                self.__server_connection = requests.Session()
+                self.__judge_connection = requests.Session()
 
-            # request to log in to judge server
-            login_response = self.__server_connection.post(url=self.path_login,
-                                                           headers={"Content-Type": "application/json"},
-                                                           json=self.credential.dict_credential_judge)
+            # try to log in to the judge server
+            try:
 
-            # parse the login response
-            login_response = login_response.json()
+                # request to log in to judge server
+                login_response = self.__judge_connection.post(url=self.path_login,
+                                                              headers={"Content-Type": "application/json"},
+                                                              json=self.credential.dict_credential_judge)
 
-            # check login request status
-            if login_response.get("result", "failure") == "success":
-                self.__logged_in = True
+                # parse the login response
+                login_response = login_response.json()
+
+                # check login request status
+                if login_response.get("result", "failure") == "success":
+                    self.__logged_in = True
+
+            # catch all exceptions
+            except Exception as e:
+                pass
 
             # break the loop if not requested blocking
             if not blocking:
@@ -1093,15 +1100,22 @@ class Judge:
         # while still logged in to judge server
         while self.logged_in:
 
-            # request to log out from judge server
-            logout_response = self.__server_connection.get(url=self.path_logout)
+            # try to log out from the judge server
+            try:
 
-            # parse the logout response
-            logout_response = logout_response.json()
+                # request to log out from judge server
+                logout_response = self.__judge_connection.get(url=self.path_logout)
 
-            # check logout request status
-            if logout_response.get("result", "failure") == "success":
-                self.__logged_in = False
+                # parse the logout response
+                logout_response = logout_response.json()
+
+                # check logout request status
+                if logout_response.get("result", "failure") == "success":
+                    self.__logged_in = False
+
+            # catch all exceptions
+            except Exception as e:
+                pass
 
             # break the loop if not requested blocking
             if not blocking:
@@ -1117,18 +1131,27 @@ class Judge:
         # check login status
         if self.logged_in:
 
-            # request system time from judge server
-            server_time_response = self.__server_connection.get(url=self.path_time)
+            # try to get server time from the judge server
+            try:
 
-            # parse the request system time response
-            server_time_response = server_time_response.json()
+                # request system time from judge server
+                server_time_response = self.__judge_connection.get(url=self.path_time)
 
-            # update time attributes
-            self.time.hour = int(server_time_response[tu_interop_compat.tu_interop_compat_time["hour"]["locale"]])
-            self.time.minute = int(server_time_response[tu_interop_compat.tu_interop_compat_time["minute"]["locale"]])
-            self.time.second = int(server_time_response[tu_interop_compat.tu_interop_compat_time["second"]["locale"]])
-            self.time.millisecond = int(
-                server_time_response[tu_interop_compat.tu_interop_compat_time["millisecond"]["locale"]])
+                # parse the request system time response
+                server_time_response = server_time_response.json()
+
+                # update time attributes
+                self.time.hour = int(server_time_response[tu_interop_compat.tu_interop_compat_time["hour"]["locale"]])
+                self.time.minute = int(
+                    server_time_response[tu_interop_compat.tu_interop_compat_time["minute"]["locale"]])
+                self.time.second = int(
+                    server_time_response[tu_interop_compat.tu_interop_compat_time["second"]["locale"]])
+                self.time.millisecond = int(
+                    server_time_response[tu_interop_compat.tu_interop_compat_time["millisecond"]["locale"]])
+
+            # catch all exceptions
+            except Exception as e:
+                pass
 
     def __dict__(self):
         """
@@ -1178,6 +1201,8 @@ class Vehicle(BaseVehicle):
         self.__auto = 0
         self.__mavlink = None
         self.__thread_telemetry_get = None
+        self.__thread_telemetry_put = None
+        self.__server_connection = None
 
     @property
     def speed(self):
@@ -1337,10 +1362,14 @@ class Vehicle(BaseVehicle):
         # call get server time method from judge object
         self.judge.server_time_get()
 
-    def telemetry_connect(self):
+    def telemetry_connect(self,
+                          ip=tu_settings.tu_telem_stream_ip,
+                          port=tu_settings.tu_telem_stream_port_interop):
         """
         connect to vehicle MAVLINK telemetry stream
 
+        :param ip: str
+        :param port: int
         :return: None
         """
 
@@ -1348,8 +1377,7 @@ class Vehicle(BaseVehicle):
         if self.__mavlink is None:
 
             # build up the connection string
-            connection_string = "{0}:{1}".format(tu_settings.tu_telem_stream_ip,
-                                                 tu_settings.tu_telem_stream_port_interop)
+            connection_string = "{0}:{1}".format(ip, port)
 
             # connect to the vehicle MAVLINK telemetry stream
             self.__mavlink = utility.mavlink_connection(connection_string)
@@ -1365,19 +1393,25 @@ class Vehicle(BaseVehicle):
 
             # never started the telemetry stream receiver thread
             if self.__thread_telemetry_get is None:
-
                 # create the telemetry stream receiver thread
                 self.__thread_telemetry_get = threading.Thread(target=self.__telemetry_get)
 
                 # start the telemetry stream receiver thread
                 self.__thread_telemetry_get.start()
 
+            # never started the telemetry data sender thread
+            if self.__thread_telemetry_put is None:
+                # create the telemetry data sender thread
+                self.__thread_telemetry_put = threading.Thread(target=self.__telemetry_put)
+
+                # start the telemetry data sender thread
+                self.__thread_telemetry_put.start()
+
     # set telemetry stream rates
     def __stream_rate_set(self):
 
         # create stream rate set message
         def stream_rate_set_message(target_system, target_component, message_id, message_frequency):
-
             # build up the MAVLINK command
             return dialect.MAVLink_command_long_message(target_system=target_system,
                                                         target_component=target_component,
@@ -1393,7 +1427,6 @@ class Vehicle(BaseVehicle):
 
         # send stream rate set message to vehicle
         def stream_rate_set(message_id, message_frequency):
-
             # create message (command)
             message = stream_rate_set_message(target_system=self.__mavlink.target_system,
                                               target_component=self.__mavlink.target_component,
@@ -1409,7 +1442,6 @@ class Vehicle(BaseVehicle):
                           dialect.MAVLINK_MSG_ID_VFR_HUD,
                           dialect.MAVLINK_MSG_ID_SYS_STATUS,
                           dialect.MAVLINK_MSG_ID_SYSTEM_TIME):
-
             # set the stream rate
             stream_rate_set(message_id=stream_id, message_frequency=5)
 
@@ -1467,3 +1499,36 @@ class Vehicle(BaseVehicle):
                 self.time.minute = unix_time.minute
                 self.time.second = unix_time.second
                 self.time.millisecond = int(unix_time.microsecond * 1e-3)
+
+    # telemetry sender thread method
+    def __telemetry_put(self):
+
+        if self.__server_connection is None:
+            # silence the requests library
+            urllib3_logger = logging.getLogger("urllib3")
+            urllib3_logger.setLevel(logging.CRITICAL)
+
+            # create a session
+            self.__server_connection = requests.Session()
+
+        # create server url
+        url = "http://{0}:{1}/telemetry_post".format(tu_settings.tu_core_server_ip,
+                                                     tu_settings.tu_core_server_port)
+
+        # do below always
+        while True:
+
+            # put telemetry data to api
+            try:
+
+                # put telemetry data to api
+                self.__server_connection.post(url=url,
+                                              headers={"Content-Type": "application/json"},
+                                              json=self.__dict__())
+
+            # catch all exceptions
+            except Exception as e:
+                pass
+
+            # cool down the put
+            time.sleep(0.2)

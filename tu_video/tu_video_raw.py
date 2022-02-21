@@ -1,7 +1,8 @@
 import urllib.request
 import numpy
 import cv2
-import tu_video_utils
+import pyfakewebcam
+import tu_video_util
 import tu_settings
 
 # testing mode is enabled
@@ -18,12 +19,12 @@ else:
     capture_device_url = "http://{0}:{1}/stream.mjpg".format(tu_settings.tu_video_stream_ip_remote,
                                                              tu_settings.tu_video_stream_port_remote)
 
-# create pub socket
-pub_socket = tu_video_utils.tu_video_create_pub(ip=tu_settings.tu_video_stream_ip_local,
-                                                port=tu_settings.tu_video_stream_port_local_raw)
+# create dummy sink for raw video streaming
+sink_raw = pyfakewebcam.FakeWebcam(video_device=tu_settings.tu_video_stream_port_local_raw,
+                                   width=tu_settings.tu_video_stream_width,
+                                   height=tu_settings.tu_video_stream_height)
 
 # do below always
-loop_count = 0
 while True:
 
     # try to connect to stream
@@ -61,16 +62,16 @@ while True:
                     # decode image
                     my_image = cv2.imdecode(numpy.frombuffer(frame_jpeg, dtype=numpy.uint8), cv2.IMREAD_COLOR)
 
-                    # manipulate data
-                    my_data = {"raw_loop_count": loop_count}
+                    # check image
+                    if tu_video_util.is_valid_image(my_image):
 
-                    # publish video stream to endpoints
-                    tu_video_utils.tu_video_pub(socket=pub_socket,
-                                                image=my_image,
-                                                data=my_data)
+                        # change color space if testing
+                        if tu_settings.tu_video_stream_test:
+                            # convert image to RGB
+                            my_image = cv2.cvtColor(my_image, cv2.COLOR_BGR2RGB)
 
-                    # update loop counter
-                    loop_count += 1
+                        # send image frame to judge sink
+                        sink_raw.schedule_frame(my_image)
 
             # error decoding the stream so go to top loop for clean reconnection
             except Exception as e:
