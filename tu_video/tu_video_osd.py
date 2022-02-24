@@ -35,17 +35,17 @@ while True:
     try:
 
         # get time
-        current_date = "DATE: " + str(datetime.datetime.now())[:10:].replace("-", "/")
+        current_date = "DATE: " + str(datetime.datetime.now())[:10:]
 
         # get telemetry data
         telemetry_data = telemetry_receiver.telemetry_get
 
         # process received telemetry data for stamping
         current_time = "TIME: {0:02d}:{1:02d}:{2:02d}.{3:03d}".format(
-            telemetry_data.get("time", {}).get("hour", 0),
-            telemetry_data.get("time", {}).get("minute", 0),
-            telemetry_data.get("time", {}).get("second", 0),
-            telemetry_data.get("time", {}).get("millisecond", 0))
+            telemetry_data.get("judge", {}).get("time", {}).get("hour", 0),
+            telemetry_data.get("judge", {}).get("time", {}).get("minute", 0),
+            telemetry_data.get("judge", {}).get("time", {}).get("second", 0),
+            telemetry_data.get("judge", {}).get("time", {}).get("millisecond", 0))
         current_mode = "MODE: {0}".format(telemetry_data.get("flight_mode", "UNKNOWN"))
         current_auto = "AUTO: {0}".format(telemetry_data.get("auto", 0))
         current_latitude = "LAT: {0:.6f}".format(telemetry_data.get("location", {}).get("latitude", 0))
@@ -56,12 +56,13 @@ while True:
         current_heading = "HDG: {0:.2f}".format(telemetry_data.get("attitude", {}).get("heading", 0))
         current_speed = "SPD: {0:.2f}".format(telemetry_data.get("speed", 0))
         current_battery = "BAT: {0:.2f}".format(telemetry_data.get("battery", 0))
-        current_target_time_start = "TTS: {0:02d}:{1:02d}:{2:02d}.{3:03d}".format(
+        current_team_number = "ID: {0}".format(telemetry_data.get("team", 0))
+        current_target_time_start = "TLS: {0:02d}:{1:02d}:{2:02d}.{3:03d}".format(
             telemetry_data.get("target", {}).get("time_start", {}).get("hour", 0),
             telemetry_data.get("target", {}).get("time_start", {}).get("minute", 0),
             telemetry_data.get("target", {}).get("time_start", {}).get("second", 0),
             telemetry_data.get("target", {}).get("time_start", {}).get("millisecond", 0))
-        current_target_time_end = "TTE: {0:02d}:{1:02d}:{2:02d}.{3:03d}".format(
+        current_target_time_end = "TLE: {0:02d}:{1:02d}:{2:02d}.{3:03d}".format(
             telemetry_data.get("target", {}).get("time_end", {}).get("hour", 0),
             telemetry_data.get("target", {}).get("time_end", {}).get("minute", 0),
             telemetry_data.get("target", {}).get("time_end", {}).get("second", 0),
@@ -71,6 +72,26 @@ while True:
         current_target_lock_y = "TLY: {0:04d}".format(telemetry_data.get("target", {}).get("y", 0))
         current_target_lock_width = "TLW: {0:04d}".format(telemetry_data.get("target", {}).get("width", 0))
         current_target_lock_height = "TLH: {0:04d}".format(telemetry_data.get("target", {}).get("height", 0))
+        current_target_latitude = "TLAT: {0:.6f}".format(
+            telemetry_data.get("foe", {}).get("location", {}).get("latitude", 0))
+        current_target_longitude = "TLON: {0:.6f}".format(
+            telemetry_data.get("foe", {}).get("location", {}).get("longitude", 0))
+        current_target_altitude = "TALT: {0:.2f}".format(
+            telemetry_data.get("foe", {}).get("location", {}).get("altitude", 0))
+        current_target_roll = "TRLL: {0:.2f}".format(
+            telemetry_data.get("foe", {}).get("attitude", {}).get("roll", 0))
+        current_target_pitch = "TPIT: {0:.2f}".format(
+            telemetry_data.get("foe", {}).get("attitude", {}).get("pitch", 0))
+        current_target_heading = "THDG: {0:.2f}".format(
+            telemetry_data.get("foe", {}).get("attitude", {}).get("heading", 0))
+        current_target_team_number = "TID: {0}".format(telemetry_data.get("foe", {}).get("team", 0))
+        current_day = "DAY: {0}".format(telemetry_data.get("competition", {}).get("day", 0))
+        current_round_local = "RND: {0}".format(telemetry_data.get("competition", {}).get("round_local", 0))
+        current_connected_vehicle = "TELEM: {0}".format(telemetry_data.get("connected", "UNKNOWN")).upper()
+        current_connected_judge = "JUDGE: {0}".format(
+            telemetry_data.get("judge", {}).get("logged_in", "UNKNOWN")).upper()
+        current_allowed_interop = "INTEROP: {0}".format(
+            telemetry_data.get("judge", {}).get("allowed_interop", "UNKNOWN")).upper()
 
         # get the image frame
         my_success, my_image = capture_device.read()
@@ -108,21 +129,47 @@ while True:
                                        osd_font, osd_font_scale, osd_font_color, osd_font_thickness, osd_font_line_type)
                 my_image = cv2.putText(my_image, current_battery, (5, 470),
                                        osd_font, osd_font_scale, osd_font_color, osd_font_thickness, osd_font_line_type)
+                my_image = cv2.putText(my_image, current_team_number, (5, 530),
+                                       osd_font, osd_font_scale, osd_font_color, osd_font_thickness, osd_font_line_type)
+                my_image = cv2.putText(my_image, current_connected_vehicle, (5, 590),
+                                       osd_font, osd_font_scale, osd_font_color, osd_font_thickness, osd_font_line_type)
+                my_image = cv2.putText(my_image, current_connected_judge, (5, 620),
+                                       osd_font, osd_font_scale, osd_font_color, osd_font_thickness, osd_font_line_type)
+                my_image = cv2.putText(my_image, current_allowed_interop, (5, 650),
+                                       osd_font, osd_font_scale, osd_font_color, osd_font_thickness, osd_font_line_type)
                 my_image = cv2.putText(my_image, "TEST UCUSU", (5, 710),
                                        osd_font, osd_font_scale, osd_font_color, osd_font_thickness, osd_font_line_type)
-                my_image = cv2.putText(my_image, current_target_time_start, (985, 30),
+                my_image = cv2.putText(my_image, current_day, (985, 30),
                                        osd_font, osd_font_scale, osd_font_color, osd_font_thickness, osd_font_line_type)
-                my_image = cv2.putText(my_image, current_target_time_end, (985, 60),
+                my_image = cv2.putText(my_image, current_round_local, (985, 60),
                                        osd_font, osd_font_scale, osd_font_color, osd_font_thickness, osd_font_line_type)
-                my_image = cv2.putText(my_image, current_target_lock, (1145, 120),
+                my_image = cv2.putText(my_image, current_target_time_start, (985, 120),
                                        osd_font, osd_font_scale, osd_font_color, osd_font_thickness, osd_font_line_type)
-                my_image = cv2.putText(my_image, current_target_lock_x, (1115, 180),
+                my_image = cv2.putText(my_image, current_target_time_end, (985, 150),
                                        osd_font, osd_font_scale, osd_font_color, osd_font_thickness, osd_font_line_type)
-                my_image = cv2.putText(my_image, current_target_lock_y, (1115, 210),
+                my_image = cv2.putText(my_image, current_target_lock, (985, 210),
                                        osd_font, osd_font_scale, osd_font_color, osd_font_thickness, osd_font_line_type)
-                my_image = cv2.putText(my_image, current_target_lock_width, (1110, 240),
+                my_image = cv2.putText(my_image, current_target_lock_x, (985, 240),
                                        osd_font, osd_font_scale, osd_font_color, osd_font_thickness, osd_font_line_type)
-                my_image = cv2.putText(my_image, current_target_lock_height, (1110, 270),
+                my_image = cv2.putText(my_image, current_target_lock_y, (985, 270),
+                                       osd_font, osd_font_scale, osd_font_color, osd_font_thickness, osd_font_line_type)
+                my_image = cv2.putText(my_image, current_target_lock_width, (985, 300),
+                                       osd_font, osd_font_scale, osd_font_color, osd_font_thickness, osd_font_line_type)
+                my_image = cv2.putText(my_image, current_target_lock_height, (985, 330),
+                                       osd_font, osd_font_scale, osd_font_color, osd_font_thickness, osd_font_line_type)
+                my_image = cv2.putText(my_image, current_target_latitude, (985, 390),
+                                       osd_font, osd_font_scale, osd_font_color, osd_font_thickness, osd_font_line_type)
+                my_image = cv2.putText(my_image, current_target_longitude, (985, 420),
+                                       osd_font, osd_font_scale, osd_font_color, osd_font_thickness, osd_font_line_type)
+                my_image = cv2.putText(my_image, current_target_altitude, (985, 450),
+                                       osd_font, osd_font_scale, osd_font_color, osd_font_thickness, osd_font_line_type)
+                my_image = cv2.putText(my_image, current_target_roll, (985, 510),
+                                       osd_font, osd_font_scale, osd_font_color, osd_font_thickness, osd_font_line_type)
+                my_image = cv2.putText(my_image, current_target_pitch, (985, 540),
+                                       osd_font, osd_font_scale, osd_font_color, osd_font_thickness, osd_font_line_type)
+                my_image = cv2.putText(my_image, current_target_heading, (985, 570),
+                                       osd_font, osd_font_scale, osd_font_color, osd_font_thickness, osd_font_line_type)
+                my_image = cv2.putText(my_image, current_target_team_number, (985, 630),
                                        osd_font, osd_font_scale, osd_font_color, osd_font_thickness, osd_font_line_type)
                 my_image = cv2.putText(my_image, "TEKNOFEST 2022", (1005, 710),
                                        osd_font, osd_font_scale, osd_font_color, osd_font_thickness, osd_font_line_type)
@@ -137,4 +184,4 @@ while True:
 
     # catch all exceptions
     except Exception as e:
-        pass
+        print(e)
