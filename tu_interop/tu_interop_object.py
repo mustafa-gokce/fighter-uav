@@ -1162,12 +1162,12 @@ class Judge:
 
         # get judge object as dictionary
         return {"time": self.time.__dict__(),
-                "credential": self.credential.__dict__(),
-                "path_login": self.path_login,
-                "path_logout": self.path_logout,
-                "path_time": self.path_time,
-                "path_send": self.path_send,
-                "path_lock": self.path_lock,
+                # "credential": self.credential.__dict__(),
+                # "path_login": self.path_login,
+                # "path_logout": self.path_logout,
+                # "path_time": self.path_time,
+                # "path_send": self.path_send,
+                # "path_lock": self.path_lock,
                 "logged_in": self.logged_in,
                 "allowed_interop": self.allowed_interop,
                 "foes": [foe.__dict__() for foe in self.foes]}
