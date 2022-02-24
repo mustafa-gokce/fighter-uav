@@ -2,6 +2,7 @@ import datetime
 import cv2
 import pyfakewebcam
 import tu_video_util
+import tu_telem.tu_telem_object
 import tu_settings
 
 # drawing related settings
@@ -24,10 +25,23 @@ sink_judge = pyfakewebcam.FakeWebcam(video_device=tu_settings.tu_video_stream_po
 # create capture device
 capture_device = tu_video_util.capture_device_create(port=tu_settings.tu_video_stream_port_local_raw)
 
+# create telemetry receiver
+telemetry_receiver = tu_telem.tu_telem_object.Receiver()
+
 while True:
 
     # get time
-    current_time = str(datetime.datetime.now())[:-3:].split(" ")
+    current_date = "DATE: " + str(datetime.datetime.now())[:10:]
+
+    # get telemetry data
+    telemetry_data = telemetry_receiver.telemetry_get
+
+    # process received telemetry data for stamping
+    current_time = "TIME: {0:02d}:{1:02d}:{2:02d}.{3:03d}".format(
+        telemetry_data.get("judge", {}).get("time", {}).get("hour", 0),
+        telemetry_data.get("judge", {}).get("time", {}).get("minute", 0),
+        telemetry_data.get("judge", {}).get("time", {}).get("second", 0),
+        telemetry_data.get("judge", {}).get("time", {}).get("millisecond", 0))
 
     # get the image frame
     my_success, my_image = capture_device.read()
@@ -39,10 +53,11 @@ while True:
         if tu_video_util.is_valid_image(my_image):
 
             # manipulate frame
-            my_image = cv2.rectangle(my_image, hit_area_top_left, hit_area_bottom_right, osd_font_color, hit_area_thickness)
-            my_image = cv2.putText(my_image, current_time[0], (5, 30),
+            my_image = cv2.rectangle(my_image, hit_area_top_left, hit_area_bottom_right, osd_font_color,
+                                     hit_area_thickness)
+            my_image = cv2.putText(my_image, current_date, (5, 30),
                                    osd_font, osd_font_scale, osd_font_color, osd_font_thickness, osd_font_line_type)
-            my_image = cv2.putText(my_image, current_time[1], (5, 60),
+            my_image = cv2.putText(my_image, current_time, (5, 60),
                                    osd_font, osd_font_scale, osd_font_color, osd_font_thickness, osd_font_line_type)
             my_image = cv2.putText(my_image, "TEST UCUSU", (5, 710),
                                    osd_font, osd_font_scale, osd_font_color, osd_font_thickness, osd_font_line_type)
