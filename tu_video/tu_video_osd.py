@@ -45,6 +45,8 @@ while True:
                                                                 telemetry_data.get("time", {}).get("minute", 0),
                                                                 telemetry_data.get("time", {}).get("second", 0),
                                                                 telemetry_data.get("time", {}).get("millisecond", 0))
+        current_mode = "MODE: {0}".format(telemetry_data.get("flight_mode", "UNKNOWN"))
+        current_auto = "AUTO: {0}".format(telemetry_data.get("auto", 0))
         current_latitude = "LAT: {0:.6f}".format(telemetry_data.get("location", {}).get("latitude", 0))
         current_longitude = "LON: {0:.6f}".format(telemetry_data.get("location", {}).get("longitude", 0))
         current_altitude = "ALT: {0:.2f}".format(telemetry_data.get("location", {}).get("altitude", 0))
@@ -70,21 +72,25 @@ while True:
                                        osd_font, osd_font_scale, osd_font_color, osd_font_thickness, osd_font_line_type)
                 my_image = cv2.putText(my_image, current_time, (5, 60),
                                        osd_font, osd_font_scale, osd_font_color, osd_font_thickness, osd_font_line_type)
-                my_image = cv2.putText(my_image, current_latitude, (5, 120),
+                my_image = cv2.putText(my_image, current_mode, (5, 120),
                                        osd_font, osd_font_scale, osd_font_color, osd_font_thickness, osd_font_line_type)
-                my_image = cv2.putText(my_image, current_longitude, (5, 150),
+                my_image = cv2.putText(my_image, current_auto, (5, 150),
                                        osd_font, osd_font_scale, osd_font_color, osd_font_thickness, osd_font_line_type)
-                my_image = cv2.putText(my_image, current_altitude, (5, 180),
+                my_image = cv2.putText(my_image, current_latitude, (5, 210),
                                        osd_font, osd_font_scale, osd_font_color, osd_font_thickness, osd_font_line_type)
-                my_image = cv2.putText(my_image, current_roll, (5, 240),
+                my_image = cv2.putText(my_image, current_longitude, (5, 240),
                                        osd_font, osd_font_scale, osd_font_color, osd_font_thickness, osd_font_line_type)
-                my_image = cv2.putText(my_image, current_pitch, (5, 270),
+                my_image = cv2.putText(my_image, current_altitude, (5, 270),
                                        osd_font, osd_font_scale, osd_font_color, osd_font_thickness, osd_font_line_type)
-                my_image = cv2.putText(my_image, current_heading, (5, 300),
+                my_image = cv2.putText(my_image, current_roll, (5, 330),
                                        osd_font, osd_font_scale, osd_font_color, osd_font_thickness, osd_font_line_type)
-                my_image = cv2.putText(my_image, current_speed, (5, 360),
+                my_image = cv2.putText(my_image, current_pitch, (5, 360),
                                        osd_font, osd_font_scale, osd_font_color, osd_font_thickness, osd_font_line_type)
-                my_image = cv2.putText(my_image, current_battery, (5, 390),
+                my_image = cv2.putText(my_image, current_heading, (5, 390),
+                                       osd_font, osd_font_scale, osd_font_color, osd_font_thickness, osd_font_line_type)
+                my_image = cv2.putText(my_image, current_speed, (5, 440),
+                                       osd_font, osd_font_scale, osd_font_color, osd_font_thickness, osd_font_line_type)
+                my_image = cv2.putText(my_image, current_battery, (5, 470),
                                        osd_font, osd_font_scale, osd_font_color, osd_font_thickness, osd_font_line_type)
                 my_image = cv2.putText(my_image, "TEST UCUSU", (5, 710),
                                        osd_font, osd_font_scale, osd_font_color, osd_font_thickness, osd_font_line_type)
