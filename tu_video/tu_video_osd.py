@@ -41,18 +41,18 @@ while True:
         telemetry_data = telemetry_receiver.telemetry_get
 
         # process received telemetry data for stamping
-        current_time = "{0:02d}:{1:02d}:{2:02d}.{3:03d}".format(telemetry_data["time"]["hour"],
-                                                                telemetry_data["time"]["minute"],
-                                                                telemetry_data["time"]["second"],
-                                                                telemetry_data["time"]["millisecond"])
-        current_latitude = "LAT: {0:.6f}".format(telemetry_data["location"]["latitude"])
-        current_longitude = "LON: {0:.6f}".format(telemetry_data["location"]["longitude"])
-        current_altitude = "ALT: {0:.2f}".format(telemetry_data["location"]["altitude"])
-        current_roll = "RLL: {0:.2f}".format(telemetry_data["attitude"]["roll"])
-        current_pitch = "PIT: {0:.2f}".format(telemetry_data["attitude"]["pitch"])
-        current_heading = "HDG: {0:.2f}".format(telemetry_data["attitude"]["heading"])
-        current_speed = "SPD: {0:.2f}".format(telemetry_data["speed"])
-        current_battery = "BAT: {0:.2f}".format(telemetry_data["battery"])
+        current_time = "{0:02d}:{1:02d}:{2:02d}.{3:03d}".format(telemetry_data.get("time", {}).get("hour", 0),
+                                                                telemetry_data.get("time", {}).get("minute", 0),
+                                                                telemetry_data.get("time", {}).get("second", 0),
+                                                                telemetry_data.get("time", {}).get("millisecond", 0))
+        current_latitude = "LAT: {0:.6f}".format(telemetry_data.get("location", {}).get("latitude", 0))
+        current_longitude = "LON: {0:.6f}".format(telemetry_data.get("location", {}).get("longitude", 0))
+        current_altitude = "ALT: {0:.2f}".format(telemetry_data.get("location", {}).get("altitude", 0))
+        current_roll = "RLL: {0:.2f}".format(telemetry_data.get("attitude", {}).get("roll", 0))
+        current_pitch = "PIT: {0:.2f}".format(telemetry_data.get("attitude", {}).get("pitch", 0))
+        current_heading = "HDG: {0:.2f}".format(telemetry_data.get("attitude", {}).get("heading", 0))
+        current_speed = "SPD: {0:.2f}".format(telemetry_data.get("speed", 0))
+        current_battery = "BAT: {0:.2f}".format(telemetry_data.get("battery", 0))
 
         # get the image frame
         my_success, my_image = capture_device.read()
@@ -85,7 +85,7 @@ while True:
                 my_image = cv2.putText(my_image, current_speed, (5, 360),
                                        osd_font, osd_font_scale, osd_font_color, osd_font_thickness, osd_font_line_type)
                 my_image = cv2.putText(my_image, current_battery, (5, 390),
-                                       osd_font, osd_font_scale,osd_font_color, osd_font_thickness, osd_font_line_type)
+                                       osd_font, osd_font_scale, osd_font_color, osd_font_thickness, osd_font_line_type)
                 my_image = cv2.putText(my_image, "TEST UCUSU", (5, 710),
                                        osd_font, osd_font_scale, osd_font_color, osd_font_thickness, osd_font_line_type)
                 my_image = cv2.putText(my_image, "TEKNOFEST 2022", (1005, 710),
