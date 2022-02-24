@@ -1526,6 +1526,12 @@ class Vehicle(BaseVehicle):
                 flight_mode_index = flight_mode_ids.index(mode_id)
                 self.__flight_mode = flight_mode_names[flight_mode_index]
 
+                # set automatic flight attribute
+                if self.flight_mode in ("GUIDED", "AUTO"):
+                    self.__auto = 1
+                else:
+                    self.__auto = 0
+
     # telemetry sender thread method
     def __telemetry_put(self):
 
