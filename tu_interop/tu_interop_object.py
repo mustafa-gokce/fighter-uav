@@ -1199,6 +1199,7 @@ class Vehicle(BaseVehicle):
         self.__speed = 0.0
         self.__battery = 0.0
         self.__auto = 0
+        self.__flight_mode = "UNKNOWN"
         self.__mavlink = None
         self.__thread_telemetry_get = None
         self.__thread_telemetry_put = None
@@ -1236,6 +1237,17 @@ class Vehicle(BaseVehicle):
 
         # expose vehicle is flying in auto mode or not
         return self.__auto
+
+    @property
+    def flight_mode(self):
+        """
+        get vehicle flight mode
+
+        :return: str
+        """
+
+        # expose vehicle flight mode
+        return self.__flight_mode
 
     @property
     def connected(self):
@@ -1320,7 +1332,8 @@ class Vehicle(BaseVehicle):
                 "team": self.team,
                 "speed": self.speed,
                 "battery": self.battery,
-                "auto": self.auto}
+                "auto": self.auto,
+                "flight_mode": self.flight_mode}
 
     def __str__(self):
         """
@@ -1448,6 +1461,11 @@ class Vehicle(BaseVehicle):
     # telemetry receiver thread method
     def __telemetry_get(self):
 
+        # get supported flight modes
+        flight_modes = self.__mavlink.mode_mapping()
+        flight_mode_names = list(flight_modes.keys())
+        flight_mode_ids = list(flight_modes.values())
+
         # do below always
         while True:
 
@@ -1499,6 +1517,14 @@ class Vehicle(BaseVehicle):
                 self.time.minute = unix_time.minute
                 self.time.second = unix_time.second
                 self.time.millisecond = int(unix_time.microsecond * 1e-3)
+
+            # message is HEARTBEAT MAVLINK message
+            elif message["mavpackettype"] == dialect.MAVLink_heartbeat_message.name:
+
+                # get flight mode of the vehicle
+                mode_id = message["custom_mode"]
+                flight_mode_index = flight_mode_ids.index(mode_id)
+                self.__flight_mode = flight_mode_names[flight_mode_index]
 
     # telemetry sender thread method
     def __telemetry_put(self):
