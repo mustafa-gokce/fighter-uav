@@ -283,6 +283,9 @@ for i, stream_name in enumerate(video_streams.keys()):
 telemetry_stream_thread = threading.Thread(target=receive_telemetry_stream)
 telemetry_stream_thread.start()
 
+# log message
+log_writer("DEBUG", context="PANEL", message="Started thread: tu_telem_stream")
+
 # while interface is running
 while dearpygui.is_dearpygui_running():
 
