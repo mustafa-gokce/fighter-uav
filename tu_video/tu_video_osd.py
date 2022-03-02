@@ -35,7 +35,7 @@ while True:
     try:
 
         # get time
-        current_date = "DATE: " + str(datetime.datetime.now())[:10:]
+        current_date = "DATE: " + str(datetime.datetime.now())[:10:].replace("-", "/")
 
         # get telemetry data
         telemetry_data = telemetry_receiver.telemetry_get
@@ -47,7 +47,7 @@ while True:
             telemetry_data.get("judge", {}).get("time", {}).get("second", 0),
             telemetry_data.get("judge", {}).get("time", {}).get("millisecond", 0))
         current_mode = "MODE: {0}".format(telemetry_data.get("flight_mode", "UNKNOWN"))
-        current_auto = "AUTO: {0}".format(telemetry_data.get("auto", 0))
+        current_auto = "ARMED: {0}".format(telemetry_data.get("armed", "UNKNOWN")).upper()
         current_latitude = "LAT: {0:.6f}".format(telemetry_data.get("location", {}).get("latitude", 0))
         current_longitude = "LON: {0:.6f}".format(telemetry_data.get("location", {}).get("longitude", 0))
         current_altitude = "ALT: {0:.2f}".format(telemetry_data.get("location", {}).get("altitude", 0))
@@ -105,9 +105,9 @@ while True:
                 # manipulate frame
                 my_image = cv2.rectangle(my_image, hit_area_top_left, hit_area_bottom_right, hit_area_color,
                                          hit_area_thickness)
-                my_image = cv2.putText(my_image, current_date, (5, 30),
+                my_image = cv2.putText(my_image, current_day, (5, 30),
                                        osd_font, osd_font_scale, osd_font_color, osd_font_thickness, osd_font_line_type)
-                my_image = cv2.putText(my_image, current_time, (5, 60),
+                my_image = cv2.putText(my_image, current_round_local, (5, 60),
                                        osd_font, osd_font_scale, osd_font_color, osd_font_thickness, osd_font_line_type)
                 my_image = cv2.putText(my_image, current_mode, (5, 120),
                                        osd_font, osd_font_scale, osd_font_color, osd_font_thickness, osd_font_line_type)
@@ -139,37 +139,37 @@ while True:
                                        osd_font, osd_font_scale, osd_font_color, osd_font_thickness, osd_font_line_type)
                 my_image = cv2.putText(my_image, "TEST UCUSU", (5, 710),
                                        osd_font, osd_font_scale, osd_font_color, osd_font_thickness, osd_font_line_type)
-                my_image = cv2.putText(my_image, current_day, (985, 30),
+                my_image = cv2.putText(my_image, current_date, (970, 30),
                                        osd_font, osd_font_scale, osd_font_color, osd_font_thickness, osd_font_line_type)
-                my_image = cv2.putText(my_image, current_round_local, (985, 60),
+                my_image = cv2.putText(my_image, current_time, (970, 60),
                                        osd_font, osd_font_scale, osd_font_color, osd_font_thickness, osd_font_line_type)
-                my_image = cv2.putText(my_image, current_target_time_start, (985, 120),
+                my_image = cv2.putText(my_image, current_target_time_start, (970, 120),
                                        osd_font, osd_font_scale, osd_font_color, osd_font_thickness, osd_font_line_type)
-                my_image = cv2.putText(my_image, current_target_time_end, (985, 150),
+                my_image = cv2.putText(my_image, current_target_time_end, (970, 150),
                                        osd_font, osd_font_scale, osd_font_color, osd_font_thickness, osd_font_line_type)
-                my_image = cv2.putText(my_image, current_target_lock, (985, 210),
+                my_image = cv2.putText(my_image, current_target_lock, (970, 210),
                                        osd_font, osd_font_scale, osd_font_color, osd_font_thickness, osd_font_line_type)
-                my_image = cv2.putText(my_image, current_target_lock_x, (985, 240),
+                my_image = cv2.putText(my_image, current_target_lock_x, (970, 240),
                                        osd_font, osd_font_scale, osd_font_color, osd_font_thickness, osd_font_line_type)
-                my_image = cv2.putText(my_image, current_target_lock_y, (985, 270),
+                my_image = cv2.putText(my_image, current_target_lock_y, (970, 270),
                                        osd_font, osd_font_scale, osd_font_color, osd_font_thickness, osd_font_line_type)
-                my_image = cv2.putText(my_image, current_target_lock_width, (985, 300),
+                my_image = cv2.putText(my_image, current_target_lock_width, (970, 300),
                                        osd_font, osd_font_scale, osd_font_color, osd_font_thickness, osd_font_line_type)
-                my_image = cv2.putText(my_image, current_target_lock_height, (985, 330),
+                my_image = cv2.putText(my_image, current_target_lock_height, (970, 330),
                                        osd_font, osd_font_scale, osd_font_color, osd_font_thickness, osd_font_line_type)
-                my_image = cv2.putText(my_image, current_target_latitude, (985, 390),
+                my_image = cv2.putText(my_image, current_target_latitude, (970, 390),
                                        osd_font, osd_font_scale, osd_font_color, osd_font_thickness, osd_font_line_type)
-                my_image = cv2.putText(my_image, current_target_longitude, (985, 420),
+                my_image = cv2.putText(my_image, current_target_longitude, (970, 420),
                                        osd_font, osd_font_scale, osd_font_color, osd_font_thickness, osd_font_line_type)
-                my_image = cv2.putText(my_image, current_target_altitude, (985, 450),
+                my_image = cv2.putText(my_image, current_target_altitude, (970, 450),
                                        osd_font, osd_font_scale, osd_font_color, osd_font_thickness, osd_font_line_type)
-                my_image = cv2.putText(my_image, current_target_roll, (985, 510),
+                my_image = cv2.putText(my_image, current_target_roll, (970, 510),
                                        osd_font, osd_font_scale, osd_font_color, osd_font_thickness, osd_font_line_type)
-                my_image = cv2.putText(my_image, current_target_pitch, (985, 540),
+                my_image = cv2.putText(my_image, current_target_pitch, (970, 540),
                                        osd_font, osd_font_scale, osd_font_color, osd_font_thickness, osd_font_line_type)
-                my_image = cv2.putText(my_image, current_target_heading, (985, 570),
+                my_image = cv2.putText(my_image, current_target_heading, (970, 570),
                                        osd_font, osd_font_scale, osd_font_color, osd_font_thickness, osd_font_line_type)
-                my_image = cv2.putText(my_image, current_target_team_number, (985, 630),
+                my_image = cv2.putText(my_image, current_target_team_number, (970, 630),
                                        osd_font, osd_font_scale, osd_font_color, osd_font_thickness, osd_font_line_type)
                 my_image = cv2.putText(my_image, "TEKNOFEST 2022", (1005, 710),
                                        osd_font, osd_font_scale, osd_font_color, osd_font_thickness, osd_font_line_type)

@@ -1,8 +1,6 @@
 import threading
 import datetime
-import logging
 import time
-import requests
 import numpy
 import cv2
 import dearpygui.dearpygui as dearpygui
@@ -58,34 +56,42 @@ def receive_video_stream(video_stream_port, video_stream_name):
     # do below always
     while True:
 
-        # get the contents
-        my_success, my_image = capture_device.read()
+        # try to get image frame
+        try:
 
-        # check frame capture was successful
-        if my_success:
+            # get the contents
+            my_success, my_image = capture_device.read()
 
-            # check image
-            if tu_video.tu_video_util.is_valid_image(my_image):
-                # resize received image
-                my_image = cv2.resize(my_image, (640, 360), interpolation=cv2.INTER_AREA)
+            # check frame capture was successful
+            if my_success:
 
-                # change color space from BGR to RGB of the received image
-                my_image = numpy.flip(my_image, 2)
+                # check image
+                if tu_video.tu_video_util.is_valid_image(my_image):
+                    # resize received image
+                    my_image = cv2.resize(my_image, (640, 360), interpolation=cv2.INTER_AREA)
 
-                # ravel the image
-                my_image = my_image.ravel()
+                    # change color space from BGR to RGB of the received image
+                    my_image = numpy.flip(my_image, 2)
 
-                # create float array for GPU acceleration benefit of interface
-                my_image = numpy.asfarray(my_image, dtype="f")
+                    # ravel the image
+                    my_image = my_image.ravel()
 
-                # create texture to be shown on interface
-                texture_data = numpy.true_divide(my_image, 255.0)
+                    # create float array for GPU acceleration benefit of interface
+                    my_image = numpy.asfarray(my_image, dtype="f")
 
-                # update texture
-                dearpygui.set_value(video_stream_name, texture_data)
+                    # create texture to be shown on interface
+                    texture_data = numpy.true_divide(my_image, 255.0)
+
+                    # update texture
+                    dearpygui.set_value(video_stream_name, texture_data)
+
+        # catch all exceptions
+        except Exception as e:
+            pass
 
         # kill the thread if user wanted exit
         if stop_threads >= 5:
+            capture_device.release()
             break
 
 
@@ -99,8 +105,88 @@ def receive_telemetry_stream():
     # do below always
     while True:
 
-        # update telemetry data related fields
-        pass
+        # try to get telemetry data
+        try:
+
+            # get telemetry data
+            telemetry_data = telemetry_receiver.telemetry_get
+
+            # update telemetry data related fields
+            dearpygui.set_value(item="tu_system_data_tag_latitude_vehicle_value",
+                                value="{0:.6f}".format(telemetry_data.get("location", {}).get("latitude", 0)))
+            dearpygui.set_value(item="tu_system_data_tag_longitude_vehicle_value",
+                                value="{0:.6f}".format(telemetry_data.get("location", {}).get("longitude", 0)))
+            dearpygui.set_value(item="tu_system_data_tag_altitude_vehicle_value",
+                                value="{0:.2f}".format(telemetry_data.get("location", {}).get("altitude", 0)))
+            dearpygui.set_value(item="tu_system_data_tag_latitude_target_value",
+                                value="{0:.6f}".format(
+                                    telemetry_data.get("foe", {}).get("location", {}).get("latitude", 0)))
+            dearpygui.set_value(item="tu_system_data_tag_longitude_target_value",
+                                value="{0:.6f}".format(
+                                    telemetry_data.get("foe", {}).get("location", {}).get("longitude", 0)))
+            dearpygui.set_value(item="tu_system_data_tag_altitude_target_value",
+                                value="{0:.2f}".format(
+                                    telemetry_data.get("foe", {}).get("location", {}).get("altitude", 0)))
+            dearpygui.set_value(item="tu_system_data_tag_roll_vehicle_value",
+                                value="{0:.2f}".format(telemetry_data.get("attitude", {}).get("roll", 0)))
+            dearpygui.set_value(item="tu_system_data_tag_pitch_vehicle_value",
+                                value="{0:.2f}".format(telemetry_data.get("attitude", {}).get("pitch", 0)))
+            dearpygui.set_value(item="tu_system_data_tag_heading_vehicle_value",
+                                value="{0:.2f}".format(telemetry_data.get("attitude", {}).get("heading", 0)))
+            dearpygui.set_value(item="tu_system_data_tag_roll_target_value",
+                                value="{0:.2f}".format(
+                                    telemetry_data.get("foe", {}).get("attitude", {}).get("roll", 0)))
+            dearpygui.set_value(item="tu_system_data_tag_pitch_target_value",
+                                value="{0:.2f}".format(
+                                    telemetry_data.get("foe", {}).get("attitude", {}).get("pitch", 0)))
+            dearpygui.set_value(item="tu_system_data_tag_heading_target_value",
+                                value="{0:.2f}".format(
+                                    telemetry_data.get("foe", {}).get("attitude", {}).get("heading", 0)))
+            dearpygui.set_value(item="tu_system_data_tag_team_vehicle_value",
+                                value="{0}".format(telemetry_data.get("team", 0)))
+            dearpygui.set_value(item="tu_system_data_tag_team_target_value",
+                                value="{0}".format(telemetry_data.get("foe", {}).get("team", 0)))
+            dearpygui.set_value(item="tu_system_data_tag_mode_vehicle_value",
+                                value="{0}".format(telemetry_data.get("flight_mode", "UNKNOWN")))
+            dearpygui.set_value(item="tu_system_data_tag_lock_target_value",
+                                value="{0}".format(telemetry_data.get("target", {}).get("lock", 0)))
+            dearpygui.set_value(item="tu_system_data_tag_arm_vehicle_value",
+                                value="{0}".format(telemetry_data.get("armed", "UNKNOWN")).upper())
+            dearpygui.set_value(item="tu_system_data_tag_x_target_value",
+                                value="{0}".format(telemetry_data.get("target", {}).get("x", 0)))
+            dearpygui.set_value(item="tu_system_data_tag_telem_vehicle_value",
+                                value="{0}".format(telemetry_data.get("connected", "UNKNOWN")).upper())
+            dearpygui.set_value(item="tu_system_data_tag_y_target_value",
+                                value="{0}".format(telemetry_data.get("target", {}).get("y", 0)))
+            dearpygui.set_value(item="tu_system_data_tag_judge_vehicle_value",
+                                value="{0}".format(telemetry_data.get("judge", {}).get("logged_in", "UNKNOWN")).upper())
+            dearpygui.set_value(item="tu_system_data_tag_width_target_value",
+                                value="{0}".format(telemetry_data.get("target", {}).get("width", 0)))
+            dearpygui.set_value(item="tu_system_data_tag_interop_vehicle_value",
+                                value="{0}".format(
+                                    telemetry_data.get("judge", {}).get("allowed_interop", "UNKNOWN")).upper())
+            dearpygui.set_value(item="tu_system_data_tag_height_target_value",
+                                value="{0}".format(telemetry_data.get("target", {}).get("height", 0)))
+            dearpygui.set_value(item="tu_system_data_tag_groundspeed_vehicle_value",
+                                value="{0:.2f}".format(telemetry_data.get("speed", 0)))
+            dearpygui.set_value(item="tu_system_data_tag_battery_vehicle_value",
+                                value="{0:.2f}".format(telemetry_data.get("battery", 0)))
+            dearpygui.set_value(item="tu_system_data_tag_start_target_value",
+                                value="{0:02d}:{1:02d}:{2:02d}.{3:03d}".format(
+                                    telemetry_data.get("target", {}).get("time_start", {}).get("hour", 0),
+                                    telemetry_data.get("target", {}).get("time_start", {}).get("minute", 0),
+                                    telemetry_data.get("target", {}).get("time_start", {}).get("second", 0),
+                                    telemetry_data.get("target", {}).get("time_start", {}).get("millisecond", 0)))
+            dearpygui.set_value(item="tu_system_data_tag_end_target_value",
+                                value="{0:02d}:{1:02d}:{2:02d}.{3:03d}".format(
+                                    telemetry_data.get("target", {}).get("time_end", {}).get("hour", 0),
+                                    telemetry_data.get("target", {}).get("time_end", {}).get("minute", 0),
+                                    telemetry_data.get("target", {}).get("time_end", {}).get("second", 0),
+                                    telemetry_data.get("target", {}).get("time_end", {}).get("millisecond", 0)))
+
+        # catch all exceptions
+        except Exception as e:
+            pass
 
         # kill the thread if user wanted exit
         if stop_threads >= 5:
@@ -214,7 +300,365 @@ with dearpygui.window(label="tu_system_data",
                       no_title_bar=False, no_background=False, no_resize=True, no_move=True,
                       no_focus_on_appearing=True, no_bring_to_front_on_focus=True, no_scrollbar=True,
                       no_close=True, no_collapse=True):
-    pass
+    # create table for vehicle data
+    with dearpygui.table(label="tu_system_data_table", tag="tu_system_data_tag_table",
+                         header_row=True, resizable=False,
+                         policy=dearpygui.mvTable_SizingStretchProp,
+                         borders_outerH=True, borders_innerV=True, borders_innerH=True, borders_outerV=True):
+        # add columns to vehicle data table
+        dearpygui.add_table_column(label="data",
+                                   tag="tu_system_data_tag_data_left",
+                                   parent="tu_system_data_tag_table")
+        dearpygui.add_table_column(label="value",
+                                   tag="tu_system_data_tag_value_left",
+                                   parent="tu_system_data_tag_table")
+        dearpygui.add_table_column(label="data",
+                                   tag="tu_system_data_tag_data_right",
+                                   parent="tu_system_data_tag_table")
+        dearpygui.add_table_column(label="value",
+                                   tag="tu_system_data_tag_value_right",
+                                   parent="tu_system_data_tag_table")
+
+        # add rows
+        for i in range(14):
+            dearpygui.add_table_row(tag="tu_system_data_tag_row_{0}".format(i + 1),
+                                    parent="tu_system_data_tag_table")
+
+        # add vehicle latitude
+        dearpygui.add_table_cell(tag="tu_system_data_tag_cell_latitude_vehicle_name",
+                                 parent="tu_system_data_tag_row_1")
+        dearpygui.add_text(default_value="Vehicle Latitude",
+                           tag="tu_system_data_tag_latitude_vehicle_name",
+                           parent="tu_system_data_tag_cell_latitude_vehicle_name")
+        dearpygui.add_table_cell(tag="tu_system_data_tag_cell_latitude_vehicle_value",
+                                 parent="tu_system_data_tag_row_1")
+        dearpygui.add_text(default_value="0.000000",
+                           tag="tu_system_data_tag_latitude_vehicle_value",
+                           parent="tu_system_data_tag_cell_latitude_vehicle_value")
+
+        # add vehicle longitude
+        dearpygui.add_table_cell(tag="tu_system_data_tag_cell_longitude_vehicle_name",
+                                 parent="tu_system_data_tag_row_2")
+        dearpygui.add_text(default_value="Vehicle Longitude",
+                           tag="tu_system_data_tag_longitude_vehicle_name",
+                           parent="tu_system_data_tag_cell_longitude_vehicle_name")
+        dearpygui.add_table_cell(tag="tu_system_data_tag_cell_longitude_vehicle_value",
+                                 parent="tu_system_data_tag_row_2")
+        dearpygui.add_text(default_value="0.000000",
+                           tag="tu_system_data_tag_longitude_vehicle_value",
+                           parent="tu_system_data_tag_cell_longitude_vehicle_value")
+
+        # add vehicle altitude
+        dearpygui.add_table_cell(tag="tu_system_data_tag_cell_altitude_vehicle_name",
+                                 parent="tu_system_data_tag_row_3")
+        dearpygui.add_text(default_value="Vehicle Altitude",
+                           tag="tu_system_data_tag_altitude_vehicle_name",
+                           parent="tu_system_data_tag_cell_altitude_vehicle_name")
+        dearpygui.add_table_cell(tag="tu_system_data_tag_cell_altitude_vehicle_value",
+                                 parent="tu_system_data_tag_row_3")
+        dearpygui.add_text(default_value="0.00",
+                           tag="tu_system_data_tag_altitude_vehicle_value",
+                           parent="tu_system_data_tag_cell_altitude_vehicle_value")
+
+        # add vehicle roll
+        dearpygui.add_table_cell(tag="tu_system_data_tag_cell_roll_vehicle_name",
+                                 parent="tu_system_data_tag_row_4")
+        dearpygui.add_text(default_value="Vehicle Roll",
+                           tag="tu_system_data_tag_roll_vehicle_name",
+                           parent="tu_system_data_tag_cell_roll_vehicle_name")
+        dearpygui.add_table_cell(tag="tu_system_data_tag_cell_roll_vehicle_value",
+                                 parent="tu_system_data_tag_row_4")
+        dearpygui.add_text(default_value="0.00",
+                           tag="tu_system_data_tag_roll_vehicle_value",
+                           parent="tu_system_data_tag_cell_roll_vehicle_value")
+
+        # add vehicle pitch
+        dearpygui.add_table_cell(tag="tu_system_data_tag_cell_pitch_vehicle_name",
+                                 parent="tu_system_data_tag_row_5")
+        dearpygui.add_text(default_value="Vehicle Pitch",
+                           tag="tu_system_data_tag_pitch_vehicle_name",
+                           parent="tu_system_data_tag_cell_pitch_vehicle_name")
+        dearpygui.add_table_cell(tag="tu_system_data_tag_cell_pitch_vehicle_value",
+                                 parent="tu_system_data_tag_row_5")
+        dearpygui.add_text(default_value="0.00",
+                           tag="tu_system_data_tag_pitch_vehicle_value",
+                           parent="tu_system_data_tag_cell_pitch_vehicle_value")
+
+        # add vehicle heading
+        dearpygui.add_table_cell(tag="tu_system_data_tag_cell_heading_vehicle_name",
+                                 parent="tu_system_data_tag_row_6")
+        dearpygui.add_text(default_value="Vehicle Heading",
+                           tag="tu_system_data_tag_heading_vehicle_name",
+                           parent="tu_system_data_tag_cell_heading_vehicle_name")
+        dearpygui.add_table_cell(tag="tu_system_data_tag_cell_heading_vehicle_value",
+                                 parent="tu_system_data_tag_row_6")
+        dearpygui.add_text(default_value="0.00",
+                           tag="tu_system_data_tag_heading_vehicle_value",
+                           parent="tu_system_data_tag_cell_heading_vehicle_value")
+
+        # add vehicle arm status
+        dearpygui.add_table_cell(tag="tu_system_data_tag_cell_arm_vehicle_name",
+                                 parent="tu_system_data_tag_row_7")
+        dearpygui.add_text(default_value="Arm Status",
+                           tag="tu_system_data_tag_arm_vehicle_name",
+                           parent="tu_system_data_tag_cell_arm_vehicle_name")
+        dearpygui.add_table_cell(tag="tu_system_data_tag_cell_arm_vehicle_value",
+                                 parent="tu_system_data_tag_row_7")
+        dearpygui.add_text(default_value="UNKNOWN",
+                           tag="tu_system_data_tag_arm_vehicle_value",
+                           parent="tu_system_data_tag_cell_arm_vehicle_value")
+
+        # add vehicle flight mode
+        dearpygui.add_table_cell(tag="tu_system_data_tag_cell_mode_vehicle_name",
+                                 parent="tu_system_data_tag_row_8")
+        dearpygui.add_text(default_value="Flight Mode",
+                           tag="tu_system_data_tag_mode_vehicle_name",
+                           parent="tu_system_data_tag_cell_mode_vehicle_name")
+        dearpygui.add_table_cell(tag="tu_system_data_tag_cell_mode_vehicle_value",
+                                 parent="tu_system_data_tag_row_8")
+        dearpygui.add_text(default_value="UNKNOWN",
+                           tag="tu_system_data_tag_mode_vehicle_value",
+                           parent="tu_system_data_tag_cell_mode_vehicle_value")
+
+        # add vehicle ground speed
+        dearpygui.add_table_cell(tag="tu_system_data_tag_cell_groundspeed_vehicle_name",
+                                 parent="tu_system_data_tag_row_9")
+        dearpygui.add_text(default_value="Ground Speed",
+                           tag="tu_system_data_tag_groundspeed_vehicle_name",
+                           parent="tu_system_data_tag_cell_groundspeed_vehicle_name")
+        dearpygui.add_table_cell(tag="tu_system_data_tag_cell_groundspeed_vehicle_value",
+                                 parent="tu_system_data_tag_row_9")
+        dearpygui.add_text(default_value="0",
+                           tag="tu_system_data_tag_groundspeed_vehicle_value",
+                           parent="tu_system_data_tag_cell_groundspeed_vehicle_value")
+
+        # add vehicle battery
+        dearpygui.add_table_cell(tag="tu_system_data_tag_cell_battery_vehicle_name",
+                                 parent="tu_system_data_tag_row_10")
+        dearpygui.add_text(default_value="Battery Level",
+                           tag="tu_system_data_tag_battery_vehicle_name",
+                           parent="tu_system_data_tag_cell_battery_vehicle_name")
+        dearpygui.add_table_cell(tag="tu_system_data_tag_cell_battery_vehicle_value",
+                                 parent="tu_system_data_tag_row_10")
+        dearpygui.add_text(default_value="0",
+                           tag="tu_system_data_tag_battery_vehicle_value",
+                           parent="tu_system_data_tag_cell_battery_vehicle_value")
+
+        # add vehicle id
+        dearpygui.add_table_cell(tag="tu_system_data_tag_cell_team_vehicle_name",
+                                 parent="tu_system_data_tag_row_11")
+        dearpygui.add_text(default_value="Team ID",
+                           tag="tu_system_data_tag_team_vehicle_name",
+                           parent="tu_system_data_tag_cell_team_vehicle_name")
+        dearpygui.add_table_cell(tag="tu_system_data_tag_cell_team_vehicle_value",
+                                 parent="tu_system_data_tag_row_11")
+        dearpygui.add_text(default_value="0",
+                           tag="tu_system_data_tag_team_vehicle_value",
+                           parent="tu_system_data_tag_cell_team_vehicle_value")
+
+        # add vehicle telemetry connection status
+        dearpygui.add_table_cell(tag="tu_system_data_tag_cell_telem_vehicle_name",
+                                 parent="tu_system_data_tag_row_12")
+        dearpygui.add_text(default_value="Telemetry Connected",
+                           tag="tu_system_data_tag_telem_vehicle_name",
+                           parent="tu_system_data_tag_cell_telem_vehicle_name")
+        dearpygui.add_table_cell(tag="tu_system_data_tag_cell_telem_vehicle_value",
+                                 parent="tu_system_data_tag_row_12")
+        dearpygui.add_text(default_value="UNKNOWN",
+                           tag="tu_system_data_tag_telem_vehicle_value",
+                           parent="tu_system_data_tag_cell_telem_vehicle_value")
+
+        # add vehicle judge connection status
+        dearpygui.add_table_cell(tag="tu_system_data_tag_cell_judge_vehicle_name",
+                                 parent="tu_system_data_tag_row_13")
+        dearpygui.add_text(default_value="Judge Connected",
+                           tag="tu_system_data_tag_judge_vehicle_name",
+                           parent="tu_system_data_tag_cell_judge_vehicle_name")
+        dearpygui.add_table_cell(tag="tu_system_data_tag_cell_judge_vehicle_value",
+                                 parent="tu_system_data_tag_row_13")
+        dearpygui.add_text(default_value="UNKNOWN",
+                           tag="tu_system_data_tag_judge_vehicle_value",
+                           parent="tu_system_data_tag_cell_judge_vehicle_value")
+
+        # add vehicle judge interop status
+        dearpygui.add_table_cell(tag="tu_system_data_tag_cell_interop_vehicle_name",
+                                 parent="tu_system_data_tag_row_14")
+        dearpygui.add_text(default_value="Allowed Interop",
+                           tag="tu_system_data_tag_interop_vehicle_name",
+                           parent="tu_system_data_tag_cell_interop_vehicle_name")
+        dearpygui.add_table_cell(tag="tu_system_data_tag_cell_interop_vehicle_value",
+                                 parent="tu_system_data_tag_row_14")
+        dearpygui.add_text(default_value="UNKNOWN",
+                           tag="tu_system_data_tag_interop_vehicle_value",
+                           parent="tu_system_data_tag_cell_interop_vehicle_value")
+
+        # add target latitude
+        dearpygui.add_table_cell(tag="tu_system_data_tag_cell_latitude_target_name",
+                                 parent="tu_system_data_tag_row_1")
+        dearpygui.add_text(default_value="Target Latitude",
+                           tag="tu_system_data_tag_latitude_target_name",
+                           parent="tu_system_data_tag_cell_latitude_target_name")
+        dearpygui.add_table_cell(tag="tu_system_data_tag_cell_latitude_target_value",
+                                 parent="tu_system_data_tag_row_1")
+        dearpygui.add_text(default_value="0.000000",
+                           tag="tu_system_data_tag_latitude_target_value",
+                           parent="tu_system_data_tag_cell_latitude_target_value")
+
+        # add target longitude
+        dearpygui.add_table_cell(tag="tu_system_data_tag_cell_longitude_target_name",
+                                 parent="tu_system_data_tag_row_2")
+        dearpygui.add_text(default_value="Target Longitude",
+                           tag="tu_system_data_tag_longitude_target_name",
+                           parent="tu_system_data_tag_cell_longitude_target_name")
+        dearpygui.add_table_cell(tag="tu_system_data_tag_cell_longitude_target_value",
+                                 parent="tu_system_data_tag_row_2")
+        dearpygui.add_text(default_value="0.000000",
+                           tag="tu_system_data_tag_longitude_target_value",
+                           parent="tu_system_data_tag_cell_longitude_target_value")
+
+        # add target altitude
+        dearpygui.add_table_cell(tag="tu_system_data_tag_cell_altitude_target_name",
+                                 parent="tu_system_data_tag_row_3")
+        dearpygui.add_text(default_value="Target Altitude",
+                           tag="tu_system_data_tag_altitude_target_name",
+                           parent="tu_system_data_tag_cell_altitude_target_name")
+        dearpygui.add_table_cell(tag="tu_system_data_tag_cell_altitude_target_value",
+                                 parent="tu_system_data_tag_row_3")
+        dearpygui.add_text(default_value="0.00",
+                           tag="tu_system_data_tag_altitude_target_value",
+                           parent="tu_system_data_tag_cell_altitude_target_value")
+
+        # add target roll
+        dearpygui.add_table_cell(tag="tu_system_data_tag_cell_roll_target_name",
+                                 parent="tu_system_data_tag_row_4")
+        dearpygui.add_text(default_value="Target Roll",
+                           tag="tu_system_data_tag_roll_target_name",
+                           parent="tu_system_data_tag_cell_roll_target_name")
+        dearpygui.add_table_cell(tag="tu_system_data_tag_cell_roll_target_value",
+                                 parent="tu_system_data_tag_row_4")
+        dearpygui.add_text(default_value="0.00",
+                           tag="tu_system_data_tag_roll_target_value",
+                           parent="tu_system_data_tag_cell_roll_target_value")
+
+        # add target pitch
+        dearpygui.add_table_cell(tag="tu_system_data_tag_cell_pitch_target_name",
+                                 parent="tu_system_data_tag_row_5")
+        dearpygui.add_text(default_value="Target Pitch",
+                           tag="tu_system_data_tag_pitch_target_name",
+                           parent="tu_system_data_tag_cell_pitch_target_name")
+        dearpygui.add_table_cell(tag="tu_system_data_tag_cell_pitch_target_value",
+                                 parent="tu_system_data_tag_row_5")
+        dearpygui.add_text(default_value="0.00",
+                           tag="tu_system_data_tag_pitch_target_value",
+                           parent="tu_system_data_tag_cell_pitch_target_value")
+
+        # add target heading
+        dearpygui.add_table_cell(tag="tu_system_data_tag_cell_heading_target_name",
+                                 parent="tu_system_data_tag_row_6")
+        dearpygui.add_text(default_value="Target Heading",
+                           tag="tu_system_data_tag_heading_target_name",
+                           parent="tu_system_data_tag_cell_heading_target_name")
+        dearpygui.add_table_cell(tag="tu_system_data_tag_cell_heading_target_value",
+                                 parent="tu_system_data_tag_row_6")
+        dearpygui.add_text(default_value="0.00",
+                           tag="tu_system_data_tag_heading_target_value",
+                           parent="tu_system_data_tag_cell_heading_target_value")
+
+        # add target id
+        dearpygui.add_table_cell(tag="tu_system_data_tag_cell_team_target_name",
+                                 parent="tu_system_data_tag_row_7")
+        dearpygui.add_text(default_value="Target ID",
+                           tag="tu_system_data_tag_team_target_name",
+                           parent="tu_system_data_tag_cell_team_target_name")
+        dearpygui.add_table_cell(tag="tu_system_data_tag_cell_team_target_value",
+                                 parent="tu_system_data_tag_row_7")
+        dearpygui.add_text(default_value="0",
+                           tag="tu_system_data_tag_team_target_value",
+                           parent="tu_system_data_tag_cell_team_target_value")
+
+        # add target lock
+        dearpygui.add_table_cell(tag="tu_system_data_tag_cell_lock_target_name",
+                                 parent="tu_system_data_tag_row_8")
+        dearpygui.add_text(default_value="Target Lock",
+                           tag="tu_system_data_tag_lock_target_name",
+                           parent="tu_system_data_tag_cell_lock_target_name")
+        dearpygui.add_table_cell(tag="tu_system_data_tag_cell_lock_target_value",
+                                 parent="tu_system_data_tag_row_8")
+        dearpygui.add_text(default_value="0",
+                           tag="tu_system_data_tag_lock_target_value",
+                           parent="tu_system_data_tag_cell_lock_target_value")
+
+        # add target pixel x
+        dearpygui.add_table_cell(tag="tu_system_data_tag_cell_x_target_name",
+                                 parent="tu_system_data_tag_row_9")
+        dearpygui.add_text(default_value="Target X",
+                           tag="tu_system_data_tag_x_target_name",
+                           parent="tu_system_data_tag_cell_x_target_name")
+        dearpygui.add_table_cell(tag="tu_system_data_tag_cell_x_target_value",
+                                 parent="tu_system_data_tag_row_9")
+        dearpygui.add_text(default_value="0",
+                           tag="tu_system_data_tag_x_target_value",
+                           parent="tu_system_data_tag_cell_x_target_value")
+
+        # add target pixel y
+        dearpygui.add_table_cell(tag="tu_system_data_tag_cell_y_target_name",
+                                 parent="tu_system_data_tag_row_10")
+        dearpygui.add_text(default_value="Target Y",
+                           tag="tu_system_data_tag_y_target_name",
+                           parent="tu_system_data_tag_cell_y_target_name")
+        dearpygui.add_table_cell(tag="tu_system_data_tag_cell_y_target_value",
+                                 parent="tu_system_data_tag_row_10")
+        dearpygui.add_text(default_value="0",
+                           tag="tu_system_data_tag_y_target_value",
+                           parent="tu_system_data_tag_cell_y_target_value")
+
+        # add target pixel width
+        dearpygui.add_table_cell(tag="tu_system_data_tag_cell_width_target_name",
+                                 parent="tu_system_data_tag_row_11")
+        dearpygui.add_text(default_value="Target Width",
+                           tag="tu_system_data_tag_width_target_name",
+                           parent="tu_system_data_tag_cell_width_target_name")
+        dearpygui.add_table_cell(tag="tu_system_data_tag_cell_width_target_value",
+                                 parent="tu_system_data_tag_row_11")
+        dearpygui.add_text(default_value="0",
+                           tag="tu_system_data_tag_width_target_value",
+                           parent="tu_system_data_tag_cell_width_target_value")
+
+        # add target pixel height
+        dearpygui.add_table_cell(tag="tu_system_data_tag_cell_height_target_name",
+                                 parent="tu_system_data_tag_row_12")
+        dearpygui.add_text(default_value="Target Height",
+                           tag="tu_system_data_tag_height_target_name",
+                           parent="tu_system_data_tag_cell_height_target_name")
+        dearpygui.add_table_cell(tag="tu_system_data_tag_cell_height_target_value",
+                                 parent="tu_system_data_tag_row_12")
+        dearpygui.add_text(default_value="0",
+                           tag="tu_system_data_tag_height_target_value",
+                           parent="tu_system_data_tag_cell_height_target_value")
+
+        # add target lock start
+        dearpygui.add_table_cell(tag="tu_system_data_tag_cell_start_target_name",
+                                 parent="tu_system_data_tag_row_13")
+        dearpygui.add_text(default_value="Lock Start",
+                           tag="tu_system_data_tag_start_target_name",
+                           parent="tu_system_data_tag_cell_start_target_name")
+        dearpygui.add_table_cell(tag="tu_system_data_tag_cell_start_target_value",
+                                 parent="tu_system_data_tag_row_13")
+        dearpygui.add_text(default_value="00:00:00.000",
+                           tag="tu_system_data_tag_start_target_value",
+                           parent="tu_system_data_tag_cell_start_target_value")
+
+        # add target lock end
+        dearpygui.add_table_cell(tag="tu_system_data_tag_cell_end_target_name",
+                                 parent="tu_system_data_tag_row_14")
+        dearpygui.add_text(default_value="Lock End",
+                           tag="tu_system_data_tag_end_target_name",
+                           parent="tu_system_data_tag_cell_end_target_name")
+        dearpygui.add_table_cell(tag="tu_system_data_tag_cell_end_target_value",
+                                 parent="tu_system_data_tag_row_14")
+        dearpygui.add_text(default_value="00:00:00.000",
+                           tag="tu_system_data_tag_end_target_value",
+                           parent="tu_system_data_tag_cell_end_target_value")
 
 # create window for vehicle log
 with dearpygui.window(label="tu_system_log",
@@ -240,7 +684,9 @@ with dearpygui.window(label="tu_system_log",
                                    tag="tu_system_log_tag_context",
                                    parent="tu_system_log_tag_table",
                                    width=40, width_fixed=True)
-        dearpygui.add_table_column(label="message")
+        dearpygui.add_table_column(label="message",
+                                   tag="tu_system_log_tag_message",
+                                   parent="tu_system_log_tag_table")
 
         # add first debug message
         log_writer("DEBUG", context="PANEL", message="Started")
