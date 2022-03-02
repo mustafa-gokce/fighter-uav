@@ -1200,6 +1200,7 @@ class Vehicle(BaseVehicle):
         self.__battery = 0.0
         self.__auto = 0
         self.__flight_mode = "UNKNOWN"
+        self.__armed = False
         self.__mavlink = None
         self.__thread_telemetry_get = None
         self.__thread_telemetry_put = None
@@ -1248,6 +1249,17 @@ class Vehicle(BaseVehicle):
 
         # expose vehicle flight mode
         return self.__flight_mode
+
+    @property
+    def armed(self):
+        """
+        get vehicle arm status
+
+        :return: bool
+        """
+
+        # expose vehicle arm status
+        return self.__armed
 
     @property
     def connected(self):
@@ -1333,7 +1345,8 @@ class Vehicle(BaseVehicle):
                 "speed": self.speed,
                 "battery": self.battery,
                 "auto": self.auto,
-                "flight_mode": self.flight_mode}
+                "flight_mode": self.flight_mode,
+                "armed": self.armed}
 
     def __str__(self):
         """
@@ -1531,6 +1544,12 @@ class Vehicle(BaseVehicle):
                     self.__auto = 1
                 else:
                     self.__auto = 0
+
+                # get arm status
+                base_mode = message["base_mode"]
+                armed_bit = base_mode & dialect.MAV_MODE_FLAG_SAFETY_ARMED
+                arm_status = armed_bit == dialect.MAV_MODE_FLAG_SAFETY_ARMED
+                self.__armed = arm_status
 
     # telemetry sender thread method
     def __telemetry_put(self):

@@ -31,7 +31,7 @@ telemetry_receiver = tu_telem.tu_telem_object.Receiver()
 while True:
 
     # get time
-    current_date = "DATE: " + str(datetime.datetime.now())[:10:]
+    current_date = "DATE: " + str(datetime.datetime.now())[:10:].replace("-", "/")
 
     # get telemetry data
     telemetry_data = telemetry_receiver.telemetry_get
@@ -55,9 +55,9 @@ while True:
             # manipulate frame
             my_image = cv2.rectangle(my_image, hit_area_top_left, hit_area_bottom_right, osd_font_color,
                                      hit_area_thickness)
-            my_image = cv2.putText(my_image, current_date, (5, 30),
+            my_image = cv2.putText(my_image, current_date, (970, 30),
                                    osd_font, osd_font_scale, osd_font_color, osd_font_thickness, osd_font_line_type)
-            my_image = cv2.putText(my_image, current_time, (5, 60),
+            my_image = cv2.putText(my_image, current_time, (970, 60),
                                    osd_font, osd_font_scale, osd_font_color, osd_font_thickness, osd_font_line_type)
             my_image = cv2.putText(my_image, "TEST UCUSU", (5, 710),
                                    osd_font, osd_font_scale, osd_font_color, osd_font_thickness, osd_font_line_type)
