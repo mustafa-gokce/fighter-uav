@@ -1,0 +1,3 @@
+[submodule "mav-rest"]
+	path = mav-rest
+	url = https://github.com/mustafa-gokce/mav-rest.git
