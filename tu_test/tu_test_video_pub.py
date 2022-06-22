@@ -4,7 +4,7 @@ import http.server
 import socketserver
 import PIL.Image
 import cv2
-import tu_settings
+import settings
 
 
 class StreamingHandler(http.server.BaseHTTPRequestHandler):
@@ -84,16 +84,16 @@ class ThreadedHTTPServer(socketserver.ThreadingMixIn, http.server.HTTPServer):
 
 # configure the capture device
 capture = cv2.VideoCapture(-1)
-capture.set(cv2.CAP_PROP_FRAME_WIDTH, tu_settings.tu_video_stream_width)
-capture.set(cv2.CAP_PROP_FRAME_HEIGHT, tu_settings.tu_video_stream_height)
-capture.set(cv2.CAP_PROP_FPS, tu_settings.tu_video_stream_fps)
+capture.set(cv2.CAP_PROP_FRAME_WIDTH, tu_settings.video_stream_width)
+capture.set(cv2.CAP_PROP_FRAME_HEIGHT, tu_settings.video_stream_height)
+capture.set(cv2.CAP_PROP_FPS, tu_settings.video_stream_fps)
 
 # try to start the server
 try:
 
     # create streaming server object
-    server = ThreadedHTTPServer((tu_settings.tu_video_stream_ip_local,
-                                 tu_settings.tu_video_stream_port_local),
+    server = ThreadedHTTPServer((tu_settings.video_stream_ip_local,
+                                 tu_settings.video_stream_port_local),
                                 StreamingHandler)
 
     # start streaming server object

@@ -6,15 +6,15 @@ import cv2
 import dearpygui.dearpygui as dearpygui
 import tu_video.tu_video_util
 import tu_telem.tu_telem_object
-import tu_settings
+import settings
 
 # global variables
 log_count = 0
 stop_threads = 0
 video_streams = {
-    "tu_video_raw_frame": tu_settings.tu_video_stream_port_local_raw,
-    "tu_video_judge_frame": tu_settings.tu_video_stream_port_local_judge,
-    "tu_video_osd_frame": tu_settings.tu_video_stream_port_local_osd
+    "tu_video_raw_frame": tu_settings.video_stream_port_local_raw,
+    "tu_video_judge_frame": tu_settings.video_stream_port_local_judge,
+    "tu_video_osd_frame": tu_settings.video_stream_port_local_osd
 }
 video_stream_threads = []
 telemetry_stream_thread = None

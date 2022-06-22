@@ -7,8 +7,8 @@ import logging
 import requests
 import pymavlink.mavutil as utility
 import pymavlink.dialects.v20.all as dialect
-import tu_settings
-import tu_interop.tu_interop_compat as tu_interop_compat
+import settings
+import interop.compat
 
 
 class DevOps:
@@ -49,8 +49,8 @@ class Competition:
     """
 
     def __init__(self):
-        self.__day = tu_settings.tu_competition_day
-        self.__round = tu_settings.tu_competition_round
+        self.__day = settings.competition_day
+        self.__round = settings.competition_round
 
     @property
     def day(self):
@@ -654,7 +654,7 @@ class Target:
             raise TypeError
 
         # x should be a reasonable number
-        if not 0 <= x < tu_settings.tu_video_stream_width:
+        if not 0 <= x < settings.video_stream_width:
             raise ValueError
 
         # set x attribute
@@ -674,7 +674,7 @@ class Target:
             raise TypeError
 
         # y should be a reasonable number
-        if not 0 <= y < tu_settings.tu_video_stream_height:
+        if not 0 <= y < settings.video_stream_height:
             raise ValueError
 
         # set y attribute
@@ -694,7 +694,7 @@ class Target:
             raise TypeError
 
         # width should be a reasonable number
-        if not 0 <= width < tu_settings.tu_video_stream_width:
+        if not 0 <= width < settings.video_stream_width:
             raise ValueError
 
         # set width attribute
@@ -714,7 +714,7 @@ class Target:
             raise TypeError
 
         # height should be a reasonable number
-        if not 0 <= height < tu_settings.tu_video_stream_height:
+        if not 0 <= height < settings.video_stream_height:
             raise ValueError
 
         # set height attribute
@@ -752,8 +752,8 @@ class Credential:
     credential class
     """
 
-    def __init__(self, user_name=tu_settings.tu_credential_user_name,
-                 user_password=tu_settings.tu_credential_user_password):
+    def __init__(self, user_name=settings.credential_user_name,
+                 user_password=settings.credential_user_password):
         self.__user_name = user_name
         self.__user_password = user_password
 
@@ -828,8 +828,8 @@ class Credential:
         """
 
         # get credential as a dictionary formatted for judge server connection
-        return {tu_interop_compat.tu_interop_compat_login["user_name"]["locale"]: self.user_name,
-                tu_interop_compat.tu_interop_compat_login["user_password"]["locale"]: self.user_password}
+        return {interop.compat.login["user_name"]["locale"]: self.user_name,
+                interop.compat.login["user_password"]["locale"]: self.user_password}
 
     def __dict__(self):
         """
@@ -936,11 +936,11 @@ class Judge:
     def __init__(self):
         self.credential = Credential()
         self.__time = Time()
-        self.__path_login = tu_interop_compat.tu_interop_compat_path_server_login
-        self.__path_logout = tu_interop_compat.tu_interop_compat_path_server_logout
-        self.__path_time = tu_interop_compat.tu_interop_compat_path_server_time
-        self.__path_send = tu_interop_compat.tu_interop_compat_path_server_send
-        self.__path_lock = tu_interop_compat.tu_interop_compat_path_server_lock
+        self.__path_login = interop.compat.path_server_login
+        self.__path_logout = interop.compat.path_server_logout
+        self.__path_time = interop.compat.path_server_time
+        self.__path_send = interop.compat.path_server_send
+        self.__path_lock = interop.compat.path_server_lock
         self.__logged_in = False
         self.__allowed_interop = False
         self.__foes = []
@@ -1141,13 +1141,10 @@ class Judge:
                 server_time_response = server_time_response.json()
 
                 # update time attributes
-                self.time.hour = int(server_time_response[tu_interop_compat.tu_interop_compat_time["hour"]["locale"]])
-                self.time.minute = int(
-                    server_time_response[tu_interop_compat.tu_interop_compat_time["minute"]["locale"]])
-                self.time.second = int(
-                    server_time_response[tu_interop_compat.tu_interop_compat_time["second"]["locale"]])
-                self.time.millisecond = int(
-                    server_time_response[tu_interop_compat.tu_interop_compat_time["millisecond"]["locale"]])
+                self.time.hour = int(server_time_response[interop.compat.time["hour"]["locale"]])
+                self.time.minute = int(server_time_response[interop.compat.time["minute"]["locale"]])
+                self.time.second = int(server_time_response[interop.compat.time["second"]["locale"]])
+                self.time.millisecond = int(server_time_response[interop.compat.time["millisecond"]["locale"]])
 
             # catch all exceptions
             except Exception as e:
@@ -1194,7 +1191,7 @@ class Vehicle(BaseVehicle):
         self.judge = Judge()
         self.competition = Competition()
         self.foe = Foe()
-        self.team = tu_settings.tu_credential_user_id
+        self.team = settings.credential_user_id
         self.__connected = False
         self.__speed = 0.0
         self.__battery = 0.0
@@ -1281,26 +1278,26 @@ class Vehicle(BaseVehicle):
         """
 
         # expose telemetry data ready for sending to the judge server
-        return {tu_interop_compat.tu_interop_compat_send["team"]["locale"]: self.team,
-                tu_interop_compat.tu_interop_compat_send["latitude"]["locale"]: self.location.latitude,
-                tu_interop_compat.tu_interop_compat_send["longitude"]["locale"]: self.location.longitude,
-                tu_interop_compat.tu_interop_compat_send["altitude"]["locale"]: self.location.altitude,
-                tu_interop_compat.tu_interop_compat_send["roll"]["locale"]: self.attitude.roll,
-                tu_interop_compat.tu_interop_compat_send["pitch"]["locale"]: self.attitude.pitch,
-                tu_interop_compat.tu_interop_compat_send["heading"]["locale"]: self.attitude.heading,
-                tu_interop_compat.tu_interop_compat_send["speed"]["locale"]: self.speed,
-                tu_interop_compat.tu_interop_compat_send["battery"]["locale"]: self.battery,
-                tu_interop_compat.tu_interop_compat_send["auto"]["locale"]: self.auto,
-                tu_interop_compat.tu_interop_compat_send["target_lock"]["locale"]: self.target.lock,
-                tu_interop_compat.tu_interop_compat_send["target_x"]["locale"]: self.target.x,
-                tu_interop_compat.tu_interop_compat_send["target_y"]["locale"]: self.target.y,
-                tu_interop_compat.tu_interop_compat_send["target_width"]["locale"]: self.target.width,
-                tu_interop_compat.tu_interop_compat_send["target_height"]["locale"]: self.target.height,
-                tu_interop_compat.tu_interop_compat_send["time"]["locale"]: {
-                    tu_interop_compat.tu_interop_compat_time["hour"]["locale"]: self.time.hour,
-                    tu_interop_compat.tu_interop_compat_time["minute"]["locale"]: self.time.minute,
-                    tu_interop_compat.tu_interop_compat_time["second"]["locale"]: self.time.second,
-                    tu_interop_compat.tu_interop_compat_time["millisecond"]["locale"]: self.time.millisecond}}
+        return {interop.compat.send["team"]["locale"]: self.team,
+                interop.compat.send["latitude"]["locale"]: self.location.latitude,
+                interop.compat.send["longitude"]["locale"]: self.location.longitude,
+                interop.compat.send["altitude"]["locale"]: self.location.altitude,
+                interop.compat.send["roll"]["locale"]: self.attitude.roll,
+                interop.compat.send["pitch"]["locale"]: self.attitude.pitch,
+                interop.compat.send["heading"]["locale"]: self.attitude.heading,
+                interop.compat.send["speed"]["locale"]: self.speed,
+                interop.compat.send["battery"]["locale"]: self.battery,
+                interop.compat.send["auto"]["locale"]: self.auto,
+                interop.compat.send["target_lock"]["locale"]: self.target.lock,
+                interop.compat.send["target_x"]["locale"]: self.target.x,
+                interop.compat.send["target_y"]["locale"]: self.target.y,
+                interop.compat.send["target_width"]["locale"]: self.target.width,
+                interop.compat.send["target_height"]["locale"]: self.target.height,
+                interop.compat.send["time"]["locale"]: {
+                    interop.compat.time["hour"]["locale"]: self.time.hour,
+                    interop.compat.time["minute"]["locale"]: self.time.minute,
+                    interop.compat.time["second"]["locale"]: self.time.second,
+                    interop.compat.time["millisecond"]["locale"]: self.time.millisecond}}
 
     @property
     def __dict_judge_lock(self):
@@ -1311,18 +1308,18 @@ class Vehicle(BaseVehicle):
         """
 
         # expose target lock data ready for sending to the judge server
-        return {tu_interop_compat.tu_interop_compat_lock["lock_auto"]["locale"]: self.auto,
-                tu_interop_compat.tu_interop_compat_lock["lock_start"]["locale"]: {
-                    tu_interop_compat.tu_interop_compat_time["hour"]["locale"]: self.target.time_start.hour,
-                    tu_interop_compat.tu_interop_compat_time["minute"]["locale"]: self.target.time_start.minute,
-                    tu_interop_compat.tu_interop_compat_time["second"]["locale"]: self.target.time_start.second,
-                    tu_interop_compat.tu_interop_compat_time["millisecond"][
+        return {interop.compat.lock["lock_auto"]["locale"]: self.auto,
+                interop.compat.lock["lock_start"]["locale"]: {
+                    interop.compat.time["hour"]["locale"]: self.target.time_start.hour,
+                    interop.compat.time["minute"]["locale"]: self.target.time_start.minute,
+                    interop.compat.time["second"]["locale"]: self.target.time_start.second,
+                    interop.compat.time["millisecond"][
                         "locale"]: self.target.time_start.millisecond},
-                tu_interop_compat.tu_interop_compat_lock["lock_end"]["locale"]: {
-                    tu_interop_compat.tu_interop_compat_time["hour"]["locale"]: self.target.time_end.hour,
-                    tu_interop_compat.tu_interop_compat_time["minute"]["locale"]: self.target.time_end.minute,
-                    tu_interop_compat.tu_interop_compat_time["second"]["locale"]: self.target.time_end.second,
-                    tu_interop_compat.tu_interop_compat_time["millisecond"][
+                interop.compat.lock["lock_end"]["locale"]: {
+                    interop.compat.time["hour"]["locale"]: self.target.time_end.hour,
+                    interop.compat.time["minute"]["locale"]: self.target.time_end.minute,
+                    interop.compat.time["second"]["locale"]: self.target.time_end.second,
+                    interop.compat.time["millisecond"][
                         "locale"]: self.target.time_end.millisecond}}
 
     def __dict__(self):
@@ -1387,89 +1384,6 @@ class Vehicle(BaseVehicle):
 
         # call get server time method from judge object
         self.judge.server_time_get()
-
-    def telemetry_connect(self,
-                          ip=tu_settings.tu_telem_stream_ip,
-                          port=tu_settings.tu_telem_stream_port_interop):
-        """
-        connect to vehicle MAVLINK telemetry stream
-
-        :param ip: str
-        :param port: int
-        :return: None
-        """
-
-        # never connected before
-        if self.__mavlink is None:
-
-            # build up the connection string
-            connection_string = "{0}:{1}".format(ip, port)
-
-            # connect to the vehicle MAVLINK telemetry stream
-            self.__mavlink = utility.mavlink_connection(connection_string)
-
-            # wait for a single heartbeat
-            self.__mavlink.wait_heartbeat()
-
-            # vehicle connection is successful
-            self.__connected = True
-
-            # set telemetry stream rates
-            self.__stream_rate_set()
-
-            # never started the telemetry stream receiver thread
-            if self.__thread_telemetry_get is None:
-                # create the telemetry stream receiver thread
-                self.__thread_telemetry_get = threading.Thread(target=self.__telemetry_get)
-
-                # start the telemetry stream receiver thread
-                self.__thread_telemetry_get.start()
-
-            # never started the telemetry data sender thread
-            if self.__thread_telemetry_put is None:
-                # create the telemetry data sender thread
-                self.__thread_telemetry_put = threading.Thread(target=self.__telemetry_put)
-
-                # start the telemetry data sender thread
-                self.__thread_telemetry_put.start()
-
-    # set telemetry stream rates
-    def __stream_rate_set(self):
-
-        # create stream rate set message
-        def stream_rate_set_message(target_system, target_component, message_id, message_frequency):
-            # build up the MAVLINK command
-            return dialect.MAVLink_command_long_message(target_system=target_system,
-                                                        target_component=target_component,
-                                                        command=dialect.MAV_CMD_SET_MESSAGE_INTERVAL,
-                                                        confirmation=0,
-                                                        param1=message_id,
-                                                        param2=1e6 / message_frequency,
-                                                        param3=0,
-                                                        param4=0,
-                                                        param5=0,
-                                                        param6=0,
-                                                        param7=0)
-
-        # send stream rate set message to vehicle
-        def stream_rate_set(message_id, message_frequency):
-            # create message (command)
-            message = stream_rate_set_message(target_system=self.__mavlink.target_system,
-                                              target_component=self.__mavlink.target_component,
-                                              message_id=message_id,
-                                              message_frequency=message_frequency)
-
-            # send built message (command) to the vehicle
-            self.__mavlink.mav.send(message)
-
-        # for each telemetry stream
-        for stream_id in (dialect.MAVLINK_MSG_ID_GLOBAL_POSITION_INT,
-                          dialect.MAVLINK_MSG_ID_ATTITUDE,
-                          dialect.MAVLINK_MSG_ID_VFR_HUD,
-                          dialect.MAVLINK_MSG_ID_SYS_STATUS,
-                          dialect.MAVLINK_MSG_ID_SYSTEM_TIME):
-            # set the stream rate
-            stream_rate_set(message_id=stream_id, message_frequency=5)
 
     # telemetry receiver thread method
     def __telemetry_get(self):
@@ -1563,8 +1477,8 @@ class Vehicle(BaseVehicle):
             self.__server_connection = requests.Session()
 
         # create server url
-        url = "http://{0}:{1}/telemetry_post".format(tu_settings.tu_core_server_ip,
-                                                     tu_settings.tu_core_server_port)
+        url = "http://{0}:{1}/telemetry_post".format(settings.core_server_ip,
+                                                     settings.core_server_port)
 
         # do below always
         while True:
