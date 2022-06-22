@@ -2,15 +2,15 @@ import time
 import requests
 import threading
 import logging
-import tu_settings
+import settings
 
 
 class Receiver:
     def __init__(self):
         self.__response = {}
         self.__session = requests.Session()
-        self.__url = "http://{0}:{1}/telemetry_get".format(tu_settings.tu_core_server_ip,
-                                                           tu_settings.tu_core_server_port)
+        self.__url = "http://{0}:{1}/telemetry_get".format(tu_settings.core_server_ip,
+                                                           tu_settings.core_server_port)
         self.__telemetry_get_thread = threading.Thread(target=self.__telemetry_get)
 
         # silence the requests library

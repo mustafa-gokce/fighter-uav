@@ -4,7 +4,7 @@ import logging
 import socketserver
 import threading
 import http.server
-import tu_settings
+import settings
 
 
 # define streaming output object
@@ -100,9 +100,9 @@ while True:
     try:
 
         # initiate camera object with context manager
-        with picamera.PiCamera(resolution="{0}x{1}".format(tu_settings.tu_video_stream_width,
-                                                           tu_settings.tu_video_stream_height),
-                               framerate=tu_settings.tu_video_stream_fps) as capture_device:
+        with picamera.PiCamera(resolution="{0}x{1}".format(tu_settings.video_stream_width,
+                                                           tu_settings.video_stream_height),
+                               framerate=tu_settings.video_stream_fps) as capture_device:
 
             # initiate output object
             output = StreamingOutput()
@@ -111,7 +111,7 @@ while True:
             capture_device.start_recording(output, format="mjpeg")
 
             # prepare address
-            address = (tu_settings.tu_vehicle_ip, tu_settings.tu_video_stream_port_remote)
+            address = (tu_settings.vehicle_ip, tu_settings.video_stream_port_remote)
 
             # create streaming server object
             server = StreamingServer(address, StreamingHandler)

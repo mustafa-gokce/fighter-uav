@@ -3,12 +3,12 @@ import cv2
 import pyfakewebcam
 import tu_video_util
 import tu_telem.tu_telem_object
-import tu_settings
+import settings
 
 # drawing related settings
-hit_area_top_left = (int(tu_settings.tu_video_stream_width * 0.25), int(tu_settings.tu_video_stream_height * 0.1))
-hit_area_bottom_right = (tu_settings.tu_video_stream_width - hit_area_top_left[0],
-                         tu_settings.tu_video_stream_height - hit_area_top_left[1])
+hit_area_top_left = (int(tu_settings.video_stream_width * 0.25), int(tu_settings.video_stream_height * 0.1))
+hit_area_bottom_right = (tu_settings.video_stream_width - hit_area_top_left[0],
+                         tu_settings.video_stream_height - hit_area_top_left[1])
 hit_area_color = (0, 0, 255)
 hit_area_thickness = 5
 osd_font = cv2.FONT_HERSHEY_SIMPLEX
@@ -18,12 +18,12 @@ osd_font_thickness = 2
 osd_font_line_type = cv2.LINE_AA
 
 # create dummy sink for judge server streaming
-sink_judge = pyfakewebcam.FakeWebcam(video_device=tu_settings.tu_video_stream_port_local_judge,
-                                     width=tu_settings.tu_video_stream_width,
-                                     height=tu_settings.tu_video_stream_height)
+sink_judge = pyfakewebcam.FakeWebcam(video_device=tu_settings.video_stream_port_local_judge,
+                                     width=tu_settings.video_stream_width,
+                                     height=tu_settings.video_stream_height)
 
 # create capture device
-capture_device = tu_video_util.capture_device_create(port=tu_settings.tu_video_stream_port_local_raw)
+capture_device = tu_video_util.capture_device_create(port=tu_settings.video_stream_port_local_raw)
 
 # create telemetry receiver
 telemetry_receiver = tu_telem.tu_telem_object.Receiver()
@@ -65,7 +65,7 @@ while True:
                                    osd_font, osd_font_scale, osd_font_color, osd_font_thickness, osd_font_line_type)
 
             # change color space if testing
-            if tu_settings.tu_video_stream_test:
+            if tu_settings.video_stream_test:
 
                 # convert image to RGB
                 my_image = cv2.cvtColor(my_image, cv2.COLOR_BGR2RGB)

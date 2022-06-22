@@ -1,6 +1,6 @@
 import time
 import cv2
-import tu_settings
+import settings
 
 
 def is_valid_image(image):
@@ -15,13 +15,13 @@ def is_valid_image(image):
         return False
 
     # check if image frame is valid
-    return image.shape == (tu_settings.tu_video_stream_height, tu_settings.tu_video_stream_width, 3)
+    return image.shape == (tu_settings.video_stream_height, tu_settings.video_stream_width, 3)
 
 
 def capture_device_create(port,
-                          width=tu_settings.tu_video_stream_width,
-                          height=tu_settings.tu_video_stream_height,
-                          fps=tu_settings.tu_video_stream_fps,
+                          width=tu_settings.video_stream_width,
+                          height=tu_settings.video_stream_height,
+                          fps=tu_settings.video_stream_fps,
                           blocking=True):
     """
     create capture device

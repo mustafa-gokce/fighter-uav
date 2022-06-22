@@ -1,4 +1,4 @@
-import tu_settings
+import settings
 
 # get monkey from gevent
 from gevent import monkey
@@ -14,7 +14,7 @@ from tu_core_server_api import application
 if __name__ == "__main__":
 
     # start the application on port 80, needs root privileges on linux
-    server_frontend = WSGIServer(listener=(tu_settings.tu_core_server_ip, tu_settings.tu_core_server_port),
+    server_frontend = WSGIServer(listener=(tu_settings.core_server_ip, tu_settings.core_server_port),
                                  application=application,
                                  log=application.logger)
     server_frontend.serve_forever()

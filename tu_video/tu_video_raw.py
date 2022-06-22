@@ -3,26 +3,26 @@ import numpy
 import cv2
 import pyfakewebcam
 import tu_video_util
-import tu_settings
+import settings
 
 # testing mode is enabled
-if tu_settings.tu_video_stream_test:
+if tu_settings.video_stream_test:
 
     # capture device is local
-    capture_device_url = "http://{0}:{1}/stream.mjpg".format(tu_settings.tu_video_stream_ip_local,
-                                                             tu_settings.tu_video_stream_port_local)
+    capture_device_url = "http://{0}:{1}/stream.mjpg".format(tu_settings.video_stream_ip_local,
+                                                             tu_settings.video_stream_port_local)
 
 # testing mode is disabled
 else:
 
     # capture device is remote
-    capture_device_url = "http://{0}:{1}/stream.mjpg".format(tu_settings.tu_video_stream_ip_remote,
-                                                             tu_settings.tu_video_stream_port_remote)
+    capture_device_url = "http://{0}:{1}/stream.mjpg".format(tu_settings.video_stream_ip_remote,
+                                                             tu_settings.video_stream_port_remote)
 
 # create dummy sink for raw video streaming
-sink_raw = pyfakewebcam.FakeWebcam(video_device=tu_settings.tu_video_stream_port_local_raw,
-                                   width=tu_settings.tu_video_stream_width,
-                                   height=tu_settings.tu_video_stream_height)
+sink_raw = pyfakewebcam.FakeWebcam(video_device=tu_settings.video_stream_port_local_raw,
+                                   width=tu_settings.video_stream_width,
+                                   height=tu_settings.video_stream_height)
 
 # do below always
 while True:
@@ -32,7 +32,7 @@ while True:
 
         # create stream
         capture_device = urllib.request.urlopen(url=capture_device_url,
-                                                timeout=tu_settings.tu_video_stream_timeout)
+                                                timeout=tu_settings.video_stream_timeout)
 
         # create frame bytes
         frame_bytes = bytes()
@@ -66,7 +66,7 @@ while True:
                     if tu_video_util.is_valid_image(my_image):
 
                         # change color space if testing
-                        if tu_settings.tu_video_stream_test:
+                        if tu_settings.video_stream_test:
                             # convert image to RGB
                             my_image = cv2.cvtColor(my_image, cv2.COLOR_BGR2RGB)
 

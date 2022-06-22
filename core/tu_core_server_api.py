@@ -1,5 +1,5 @@
 import flask
-import tu_settings
+import settings
 
 # create application
 application = flask.Flask("tu_core_server")
@@ -33,4 +33,4 @@ def page_not_found(error):
 # only run the server when direct call
 if __name__ == "__main__":
     # start core server
-    application.run(debug=True, host=tu_settings.tu_core_server_ip, port=tu_settings.tu_core_server_port, threaded=True)
+    application.run(debug=True, host=tu_settings.core_server_ip, port=tu_settings.core_server_port, threaded=True)
