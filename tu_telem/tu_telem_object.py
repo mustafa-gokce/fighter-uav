@@ -9,8 +9,8 @@ class Receiver:
     def __init__(self):
         self.__response = {}
         self.__session = requests.Session()
-        self.__url = "http://{0}:{1}/telemetry_get".format(tu_settings.core_server_ip,
-                                                           tu_settings.core_server_port)
+        self.__url = "http://{0}:{1}/telemetry_get".format(tu_settings.rest_server_ip,
+                                                           tu_settings.rest_server_port)
         self.__telemetry_get_thread = threading.Thread(target=self.__telemetry_get)
 
         # silence the requests library

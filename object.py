@@ -5,10 +5,13 @@ import datetime
 import subprocess
 import logging
 import requests
-import pymavlink.mavutil as utility
 import pymavlink.dialects.v20.all as dialect
 import settings
-import interop.compat
+import compat
+
+# silence the requests library
+urllib3_logger = logging.getLogger("urllib3")
+urllib3_logger.setLevel(logging.CRITICAL)
 
 
 class DevOps:
@@ -828,8 +831,8 @@ class Credential:
         """
 
         # get credential as a dictionary formatted for judge server connection
-        return {interop.compat.login["user_name"]["locale"]: self.user_name,
-                interop.compat.login["user_password"]["locale"]: self.user_password}
+        return {compat.login["user_name"]["locale"]: self.user_name,
+                compat.login["user_password"]["locale"]: self.user_password}
 
     def __dict__(self):
         """
@@ -936,11 +939,11 @@ class Judge:
     def __init__(self):
         self.credential = Credential()
         self.__time = Time()
-        self.__path_login = interop.compat.path_server_login
-        self.__path_logout = interop.compat.path_server_logout
-        self.__path_time = interop.compat.path_server_time
-        self.__path_send = interop.compat.path_server_send
-        self.__path_lock = interop.compat.path_server_lock
+        self.__path_login = compat.path_server_login
+        self.__path_logout = compat.path_server_logout
+        self.__path_time = compat.path_server_time
+        self.__path_send = compat.path_server_send
+        self.__path_lock = compat.path_server_lock
         self.__logged_in = False
         self.__allowed_interop = False
         self.__foes = []
@@ -1141,10 +1144,10 @@ class Judge:
                 server_time_response = server_time_response.json()
 
                 # update time attributes
-                self.time.hour = int(server_time_response[interop.compat.time["hour"]["locale"]])
-                self.time.minute = int(server_time_response[interop.compat.time["minute"]["locale"]])
-                self.time.second = int(server_time_response[interop.compat.time["second"]["locale"]])
-                self.time.millisecond = int(server_time_response[interop.compat.time["millisecond"]["locale"]])
+                self.time.hour = int(server_time_response[compat.time["hour"]["locale"]])
+                self.time.minute = int(server_time_response[compat.time["minute"]["locale"]])
+                self.time.second = int(server_time_response[compat.time["second"]["locale"]])
+                self.time.millisecond = int(server_time_response[compat.time["millisecond"]["locale"]])
 
             # catch all exceptions
             except Exception as e:
@@ -1198,8 +1201,7 @@ class Vehicle(BaseVehicle):
         self.__auto = 0
         self.__flight_mode = "UNKNOWN"
         self.__armed = False
-        self.__mavlink = None
-        self.__thread_telemetry_get = None
+        self.__thread_telemetry_get = threading.Thread(target=self.__telemetry_get).start()
         self.__thread_telemetry_put = None
         self.__server_connection = None
 
@@ -1278,26 +1280,26 @@ class Vehicle(BaseVehicle):
         """
 
         # expose telemetry data ready for sending to the judge server
-        return {interop.compat.send["team"]["locale"]: self.team,
-                interop.compat.send["latitude"]["locale"]: self.location.latitude,
-                interop.compat.send["longitude"]["locale"]: self.location.longitude,
-                interop.compat.send["altitude"]["locale"]: self.location.altitude,
-                interop.compat.send["roll"]["locale"]: self.attitude.roll,
-                interop.compat.send["pitch"]["locale"]: self.attitude.pitch,
-                interop.compat.send["heading"]["locale"]: self.attitude.heading,
-                interop.compat.send["speed"]["locale"]: self.speed,
-                interop.compat.send["battery"]["locale"]: self.battery,
-                interop.compat.send["auto"]["locale"]: self.auto,
-                interop.compat.send["target_lock"]["locale"]: self.target.lock,
-                interop.compat.send["target_x"]["locale"]: self.target.x,
-                interop.compat.send["target_y"]["locale"]: self.target.y,
-                interop.compat.send["target_width"]["locale"]: self.target.width,
-                interop.compat.send["target_height"]["locale"]: self.target.height,
-                interop.compat.send["time"]["locale"]: {
-                    interop.compat.time["hour"]["locale"]: self.time.hour,
-                    interop.compat.time["minute"]["locale"]: self.time.minute,
-                    interop.compat.time["second"]["locale"]: self.time.second,
-                    interop.compat.time["millisecond"]["locale"]: self.time.millisecond}}
+        return {compat.send["team"]["locale"]: self.team,
+                compat.send["latitude"]["locale"]: self.location.latitude,
+                compat.send["longitude"]["locale"]: self.location.longitude,
+                compat.send["altitude"]["locale"]: self.location.altitude,
+                compat.send["roll"]["locale"]: self.attitude.roll,
+                compat.send["pitch"]["locale"]: self.attitude.pitch,
+                compat.send["heading"]["locale"]: self.attitude.heading,
+                compat.send["speed"]["locale"]: self.speed,
+                compat.send["battery"]["locale"]: self.battery,
+                compat.send["auto"]["locale"]: self.auto,
+                compat.send["target_lock"]["locale"]: self.target.lock,
+                compat.send["target_x"]["locale"]: self.target.x,
+                compat.send["target_y"]["locale"]: self.target.y,
+                compat.send["target_width"]["locale"]: self.target.width,
+                compat.send["target_height"]["locale"]: self.target.height,
+                compat.send["time"]["locale"]: {
+                    compat.time["hour"]["locale"]: self.time.hour,
+                    compat.time["minute"]["locale"]: self.time.minute,
+                    compat.time["second"]["locale"]: self.time.second,
+                    compat.time["millisecond"]["locale"]: self.time.millisecond}}
 
     @property
     def __dict_judge_lock(self):
@@ -1308,18 +1310,18 @@ class Vehicle(BaseVehicle):
         """
 
         # expose target lock data ready for sending to the judge server
-        return {interop.compat.lock["lock_auto"]["locale"]: self.auto,
-                interop.compat.lock["lock_start"]["locale"]: {
-                    interop.compat.time["hour"]["locale"]: self.target.time_start.hour,
-                    interop.compat.time["minute"]["locale"]: self.target.time_start.minute,
-                    interop.compat.time["second"]["locale"]: self.target.time_start.second,
-                    interop.compat.time["millisecond"][
+        return {compat.lock["lock_auto"]["locale"]: self.auto,
+                compat.lock["lock_start"]["locale"]: {
+                    compat.time["hour"]["locale"]: self.target.time_start.hour,
+                    compat.time["minute"]["locale"]: self.target.time_start.minute,
+                    compat.time["second"]["locale"]: self.target.time_start.second,
+                    compat.time["millisecond"][
                         "locale"]: self.target.time_start.millisecond},
-                interop.compat.lock["lock_end"]["locale"]: {
-                    interop.compat.time["hour"]["locale"]: self.target.time_end.hour,
-                    interop.compat.time["minute"]["locale"]: self.target.time_end.minute,
-                    interop.compat.time["second"]["locale"]: self.target.time_end.second,
-                    interop.compat.time["millisecond"][
+                compat.lock["lock_end"]["locale"]: {
+                    compat.time["hour"]["locale"]: self.target.time_end.hour,
+                    compat.time["minute"]["locale"]: self.target.time_end.minute,
+                    compat.time["second"]["locale"]: self.target.time_end.second,
+                    compat.time["millisecond"][
                         "locale"]: self.target.time_end.millisecond}}
 
     def __dict__(self):
@@ -1385,100 +1387,94 @@ class Vehicle(BaseVehicle):
         # call get server time method from judge object
         self.judge.server_time_get()
 
+    def wait_ready(self):
+        """
+        wait the vehicle to be connected
+        """
+
+        # while not connect to the vehicle
+        while not self.connected:
+            # wait the vehicle to be connected
+            time.sleep(0.1)
+
     # telemetry receiver thread method
     def __telemetry_get(self):
 
-        # get supported flight modes
-        flight_modes = self.__mavlink.mode_mapping()
-        flight_mode_names = list(flight_modes.keys())
-        flight_mode_ids = list(flight_modes.values())
+        # flight mode declarations
+        flight_mode_names = list(compat.mode_mapping.keys())
+        flight_mode_numbers = list(compat.mode_mapping.values())
 
         # do below always
         while True:
 
-            # receive a single MAVLINK message
-            message = self.__mavlink.recv_msg()
+            # just to cool down
+            time.sleep(settings.rest_server_delay)
+
+            # try to receive vehicle state
+            try:
+                vehicle_state = requests.get(url="http://{0}:{1}/get/all".format(settings.rest_server_ip,
+                                                                                 settings.rest_server_port)).json()
+            except requests.exceptions.ConnectionError:
+                vehicle_state = {}
 
             # not received a message
-            if not message:
+            if not vehicle_state:
+                self.__connected = False
                 continue
+            self.__connected = True
 
-            # convert received message to dictionary
-            message = message.to_dict()
+            # get latitude, longitude, relative altitude and heading of the vehicle
+            self.location.latitude = vehicle_state["GLOBAL_POSITION_INT"]["lat"] * 1e-7
+            self.location.longitude = vehicle_state["GLOBAL_POSITION_INT"]["lon"] * 1e-7
+            self.location.altitude = vehicle_state["GLOBAL_POSITION_INT"]["relative_alt"] * 1e-3
+            self.attitude.heading = vehicle_state["GLOBAL_POSITION_INT"]["hdg"] * 1e-2
 
-            # message is GLOBAL_POSITION_INT MAVLINK message
-            if message["mavpackettype"] == dialect.MAVLink_global_position_int_message.name:
+            # get roll and pitch of the vehicle
+            self.attitude.roll = math.degrees(vehicle_state["ATTITUDE"]["roll"])
+            self.attitude.pitch = math.degrees(vehicle_state["ATTITUDE"]["pitch"])
 
-                # get latitude, longitude, relative altitude and heading of the vehicle
-                self.location.latitude = message["lat"] * 1e-7
-                self.location.longitude = message["lon"] * 1e-7
-                self.location.altitude = message["relative_alt"] * 1e-3
-                self.attitude.heading = message["hdg"] * 1e-2
+            # get ground speed of the vehicle
+            self.__speed = vehicle_state["VFR_HUD"]["groundspeed"]
 
-            # message is ATTITUDE MAVLINK message
-            elif message["mavpackettype"] == dialect.MAVLink_attitude_message.name:
+            # get remaining battery percent of the vehicle
+            self.__battery = vehicle_state["SYS_STATUS"]["battery_remaining"]
 
-                # get roll and pitch of the vehicle
-                self.attitude.roll = math.degrees(message["roll"])
-                self.attitude.pitch = math.degrees(message["pitch"])
+            # get system time of the vehicle
+            unix_time = vehicle_state["SYSTEM_TIME"]["time_unix_usec"]
+            unix_time = datetime.datetime.utcfromtimestamp(unix_time * 1e-6)
+            self.time.hour = unix_time.hour
+            self.time.minute = unix_time.minute
+            self.time.second = unix_time.second
+            self.time.millisecond = int(unix_time.microsecond * 1e-3)
 
-            # message is VFR_HUD MAVLINK message
-            elif message["mavpackettype"] == dialect.MAVLink_vfr_hud_message.name:
+            # get flight mode of the vehicle
+            custom_mode = vehicle_state["HEARTBEAT"]["custom_mode"]
+            custom_mode_index = flight_mode_numbers.index(custom_mode)
+            self.__flight_mode = flight_mode_names[custom_mode_index]
 
-                # get ground speed of the vehicle
-                self.__speed = message["groundspeed"]
+            # set automatic flight attribute
+            if self.flight_mode in ("GUIDED", "AUTO"):
+                self.__auto = 1
+            else:
+                self.__auto = 0
 
-            # message is SYS_STATUS MAVLINK message
-            elif message["mavpackettype"] == dialect.MAVLink_sys_status_message.name:
-
-                # get remaining battery percent of the vehicle
-                self.__battery = message["battery_remaining"]
-
-            # message is SYSTEM_TIME MAVLINK message
-            elif message["mavpackettype"] == dialect.MAVLink_system_time_message.name:
-
-                # get system time of the vehicle
-                unix_time = message["time_unix_usec"]
-                unix_time = datetime.datetime.utcfromtimestamp(unix_time * 1e-6)
-                self.time.hour = unix_time.hour
-                self.time.minute = unix_time.minute
-                self.time.second = unix_time.second
-                self.time.millisecond = int(unix_time.microsecond * 1e-3)
-
-            # message is HEARTBEAT MAVLINK message
-            elif message["mavpackettype"] == dialect.MAVLink_heartbeat_message.name:
-
-                # get flight mode of the vehicle
-                mode_id = message["custom_mode"]
-                flight_mode_index = flight_mode_ids.index(mode_id)
-                self.__flight_mode = flight_mode_names[flight_mode_index]
-
-                # set automatic flight attribute
-                if self.flight_mode in ("GUIDED", "AUTO"):
-                    self.__auto = 1
-                else:
-                    self.__auto = 0
-
-                # get arm status
-                base_mode = message["base_mode"]
-                armed_bit = base_mode & dialect.MAV_MODE_FLAG_SAFETY_ARMED
-                arm_status = armed_bit == dialect.MAV_MODE_FLAG_SAFETY_ARMED
-                self.__armed = arm_status
+            # get arm status
+            base_mode = vehicle_state["HEARTBEAT"]["base_mode"]
+            armed_bit = base_mode & dialect.MAV_MODE_FLAG_SAFETY_ARMED
+            arm_status = armed_bit == dialect.MAV_MODE_FLAG_SAFETY_ARMED
+            self.__armed = arm_status
 
     # telemetry sender thread method
     def __telemetry_put(self):
 
+        # never connected to server before
         if self.__server_connection is None:
-            # silence the requests library
-            urllib3_logger = logging.getLogger("urllib3")
-            urllib3_logger.setLevel(logging.CRITICAL)
-
             # create a session
             self.__server_connection = requests.Session()
 
         # create server url
-        url = "http://{0}:{1}/telemetry_post".format(settings.core_server_ip,
-                                                     settings.core_server_port)
+        url = "http://{0}:{1}/telemetry_post".format(settings.rest_server_ip,
+                                                     settings.rest_server_port)
 
         # do below always
         while True:
