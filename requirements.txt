@@ -19,3 +19,5 @@ wrapt_timeout_decorator
 requests
 Pillow
 pyfakewebcam
+qrcode
+pyzbar
