@@ -27,3 +27,18 @@ logger.info("vehicle telemetry connection status: " + str(vehicle.connected))
 
 # log the flight mode of the vehicle
 logger.info("vehicle flight mode: " + str(vehicle.flight_mode))
+
+# enable to communicate with judge server
+vehicle.judge.interop_enable()
+
+# log the login status to judge server
+logger.info("vehicle judge server login status: " + str(vehicle.judge.logged_in))
+
+# login to judge server
+vehicle.judge.server_login()
+
+# log the login status to judge server
+logger.info("vehicle judge server login status: " + str(vehicle.judge.logged_in))
+
+# dump vehicular data
+logger.info(vehicle.__dict__())

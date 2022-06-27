@@ -1,6 +1,0 @@
-[submodule "mav-rest"]
-	path = mav-rest
-	url = https://github.com/mustafa-gokce/mav-rest.git
-[submodule "plane-follow"]
-	path = plane-follow
-	url = https://github.com/mustafa-gokce/plane-follow.git

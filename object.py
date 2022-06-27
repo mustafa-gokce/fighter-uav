@@ -937,17 +937,17 @@ class Judge:
 
     def __init__(self):
         self.credential = Credential()
-        self.__time = Time()
-        self.__path_login = compat.path_server_login
-        self.__path_logout = compat.path_server_logout
-        self.__path_time = compat.path_server_time
-        self.__path_send = compat.path_server_send
-        self.__path_lock = compat.path_server_lock
-        self.__logged_in = False
-        self.__allowed_interop = False
-        self.__foes = []
-        self.__judge_connection = None
-        self.__server_connection_thread = None
+        self._time = Time()
+        self._path_login = compat.path_server_login
+        self._path_logout = compat.path_server_logout
+        self._path_time = compat.path_server_time
+        self._path_send = compat.path_server_send
+        self._path_lock = compat.path_server_lock
+        self._logged_in = False
+        self._interop_enabled = False
+        self._foes = []
+        self._server_connection = None
+        self._server_connection_thread = None
 
     @property
     def time(self):
@@ -958,7 +958,7 @@ class Judge:
         """
 
         # expose judge server time object attribute
-        return self.__time
+        return self._time
 
     @property
     def path_login(self):
@@ -969,7 +969,7 @@ class Judge:
         """
 
         # expose judge server login path
-        return self.__path_login
+        return self._path_login
 
     @property
     def path_logout(self):
@@ -980,7 +980,7 @@ class Judge:
         """
 
         # expose judge server logout path
-        return self.__path_logout
+        return self._path_logout
 
     @property
     def path_time(self):
@@ -991,7 +991,7 @@ class Judge:
         """
 
         # expose judge server time path
-        return self.__path_time
+        return self._path_time
 
     @property
     def path_send(self):
@@ -1002,7 +1002,7 @@ class Judge:
         """
 
         # expose judge server telemetry dealing path
-        return self.__path_send
+        return self._path_send
 
     @property
     def path_lock(self):
@@ -1013,7 +1013,7 @@ class Judge:
         """
 
         # expose judge server target lock dealing path
-        return self.__path_lock
+        return self._path_lock
 
     @property
     def logged_in(self):
@@ -1024,10 +1024,10 @@ class Judge:
         """
 
         # expose logged in to judge server or not
-        return self.__logged_in
+        return self._logged_in
 
     @property
-    def allowed_interop(self):
+    def interop_enabled(self):
         """
         get enabled to deal telemetry with judge server
 
@@ -1035,7 +1035,7 @@ class Judge:
         """
 
         # expose enabled to deal telemetry with judge server
-        return self.__allowed_interop
+        return self._interop_enabled
 
     @property
     def foes(self):
@@ -1046,7 +1046,27 @@ class Judge:
         """
 
         # expose incoming foe data from judge server
-        return self.__foes
+        return self._foes
+
+    def interop_enable(self):
+        """
+        enable to communicate with judge server
+
+        :return: None
+        """
+
+        # enable to communicate with judge server
+        self._interop_enabled = True
+
+    def interop_disable(self):
+        """
+        disable to communicate with judge server
+
+        :return: None
+        """
+
+        # disable to communicate with judge server
+        self._interop_enabled = False
 
     def server_login(self, blocking=True):
         """
@@ -1056,40 +1076,39 @@ class Judge:
         :return: None
         """
 
-        # while not logged in to judge server
-        while not self.logged_in:
+        # check if interop is enabled
+        if self.interop_enabled:
 
-            # if there is no connection
-            if self.__judge_connection is None:
-                # silence the requests library
-                urllib3_logger = logging.getLogger("urllib3")
-                urllib3_logger.setLevel(logging.CRITICAL)
+            # while not logged in to judge server
+            while not self.logged_in:
 
-                # create a session
-                self.__judge_connection = requests.Session()
+                # if there is no connection
+                if self._server_connection is None:
+                    # create a session
+                    self._server_connection = requests.Session()
 
-            # try to log in to the judge server
-            try:
+                # try to log in to the judge server
+                try:
 
-                # request to log in to judge server
-                login_response = self.__judge_connection.post(url=self.path_login,
-                                                              headers={"Content-Type": "application/json"},
-                                                              json=self.credential.dict_credential_judge)
+                    # request to log in to judge server
+                    login_response = self._server_connection.post(url=self.path_login,
+                                                                  headers={"Content-Type": "application/json"},
+                                                                  json=self.credential.dict_credential_judge)
 
-                # parse the login response
-                login_response = login_response.json()
+                    # check login request status
+                    if login_response.status_code == 200:
+                        self._logged_in = True
 
-                # check login request status
-                if login_response.get("result", "failure") == "success":
-                    self.__logged_in = True
+                # catch all exceptions
+                except Exception as e:
+                    pass
 
-            # catch all exceptions
-            except Exception as e:
-                pass
+                # break the loop if not requested blocking
+                if not blocking:
+                    break
 
-            # break the loop if not requested blocking
-            if not blocking:
-                break
+                # cool down the process
+                time.sleep(0.1)
 
     def server_logout(self, blocking=True):
         """
@@ -1098,30 +1117,32 @@ class Judge:
         :param blocking: bool
         :return: None
         """
+        # check if interop is enabled
+        if self.interop_enabled:
 
-        # while still logged in to judge server
-        while self.logged_in:
+            # while still logged in to judge server
+            while self.logged_in:
 
-            # try to log out from the judge server
-            try:
+                # try to log out from the judge server
+                try:
 
-                # request to log out from judge server
-                logout_response = self.__judge_connection.get(url=self.path_logout)
+                    # request to log out from judge server
+                    logout_response = self._server_connection.get(url=self.path_logout)
 
-                # parse the logout response
-                logout_response = logout_response.json()
+                    # check logout request status
+                    if logout_response.status_code == 200:
+                        self._logged_in = False
 
-                # check logout request status
-                if logout_response.get("result", "failure") == "success":
-                    self.__logged_in = False
+                # catch all exceptions
+                except Exception as e:
+                    pass
 
-            # catch all exceptions
-            except Exception as e:
-                pass
+                # break the loop if not requested blocking
+                if not blocking:
+                    break
 
-            # break the loop if not requested blocking
-            if not blocking:
-                break
+                # cool down the process
+                time.sleep(0.1)
 
     def server_time_get(self):
         """
@@ -1129,28 +1150,30 @@ class Judge:
 
         :return: None
         """
+        # check if interop is enabled
+        if self.interop_enabled:
 
-        # check login status
-        if self.logged_in:
+            # check login status
+            if self.logged_in:
 
-            # try to get server time from the judge server
-            try:
+                # try to get server time from the judge server
+                try:
 
-                # request system time from judge server
-                server_time_response = self.__judge_connection.get(url=self.path_time)
+                    # request system time from judge server
+                    server_time_response = self._server_connection.get(url=self.path_time)
 
-                # parse the request system time response
-                server_time_response = server_time_response.json()
+                    # parse the request system time response
+                    server_time_response = server_time_response.json()
 
-                # update time attributes
-                self.time.hour = int(server_time_response[compat.time["hour"]["locale"]])
-                self.time.minute = int(server_time_response[compat.time["minute"]["locale"]])
-                self.time.second = int(server_time_response[compat.time["second"]["locale"]])
-                self.time.millisecond = int(server_time_response[compat.time["millisecond"]["locale"]])
+                    # update time attributes
+                    self.time.hour = int(server_time_response[compat.time["hour"]["locale"]])
+                    self.time.minute = int(server_time_response[compat.time["minute"]["locale"]])
+                    self.time.second = int(server_time_response[compat.time["second"]["locale"]])
+                    self.time.millisecond = int(server_time_response[compat.time["millisecond"]["locale"]])
 
-            # catch all exceptions
-            except Exception as e:
-                pass
+                # catch all exceptions
+                except Exception as e:
+                    pass
 
     def __dict__(self):
         """
@@ -1168,7 +1191,7 @@ class Judge:
                 # "path_send": self.path_send,
                 # "path_lock": self.path_lock,
                 "logged_in": self.logged_in,
-                "allowed_interop": self.allowed_interop,
+                "interop_enabled": self.interop_enabled,
                 "foes": [foe.__dict__() for foe in self.foes]}
 
     def __str__(self):
@@ -1190,7 +1213,7 @@ class Vehicle(BaseVehicle):
     def __init__(self):
         super().__init__()
         self._target = Target()
-        self._judge = Judge()
+        self.judge = Judge()
         self._competition = Competition()
         self._foe = Foe()
         self._team = settings.credential_user_id
@@ -1332,7 +1355,7 @@ class Vehicle(BaseVehicle):
                 "location": self.location.__dict__(),
                 "attitude": self.attitude.__dict__(),
                 "target": self._target.__dict__(),
-                "judge": self._judge.__dict__(),
+                "judge": self.judge.__dict__(),
                 "competition": self._competition.__dict__(),
                 "foe": self._foe.__dict__(),
                 "team": self._team,
@@ -1351,36 +1374,6 @@ class Vehicle(BaseVehicle):
 
         # expose vehicle class dictionary as string
         return str(self.__dict__())
-
-    def server_login(self):
-        """
-        login to judge server
-
-        :return: None
-        """
-
-        # call server login method from judge object
-        self._judge.server_login()
-
-    def server_logout(self):
-        """
-        logout from judge server
-
-        :return: None
-        """
-
-        # call server logout method from judge object
-        self._judge.server_logout()
-
-    def server_time_get(self):
-        """
-        get server time from judge server
-
-        :return: None
-        """
-
-        # call get server time method from judge object
-        self._judge.server_time_get()
 
     def wait_ready(self):
         """

@@ -6,7 +6,7 @@ mkdir -p logs/
 cd logs/ || exit 1
 
 # start plane follow simulation environment
-cd "$HOME"/test-ucusu/fighter-uav/plane-follow/ || exit 1
+cd "$HOME"/test-ucusu/plane-follow/ || exit 1
 /usr/bin/bash plane_follow_start.sh
 
 # wait for vehicles to be fully deployed
@@ -15,5 +15,9 @@ until ! screen -list | grep -q "plane_follow_deploy"; do
 done
 
 # start rest server
-cd "$HOME"/test-ucusu/fighter-uav/mav-rest/ || exit 1
-screen -S mav-rest -d -m bash -c "PYTHONPATH=$(pwd) /usr/bin/python3 mav-rest.py --host=127.0.0.1 --port=8000 --master=127.0.0.1:10010"
+cd "$HOME"/test-ucusu/mav-rest/ || exit 1
+screen -S mav-rest -d -m bash -c "/usr/bin/python3 mav-rest.py --host=127.0.0.1 --port=8000 --master=127.0.0.1:10010"
+
+# start judge server
+cd "$HOME"/test-ucusu/fighter-judge/ || exit 1
+screen -S fighter-judge -d -m bash -c "/usr/bin/python3 app.py"
