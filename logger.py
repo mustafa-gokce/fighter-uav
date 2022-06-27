@@ -12,7 +12,7 @@ class Logger:
         log_format = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 
         # create log file path
-        full_path = "../logs/" + file_name + ".log"
+        full_path = "logs/" + file_name + ".log"
 
         # basic configs for logger
         logging.basicConfig(level=logging.DEBUG, stream=sys.stdout, format=log_format)

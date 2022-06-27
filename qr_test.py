@@ -99,7 +99,7 @@ while True:
         polygon = polygon.reshape((-1, 1, 2))
         cv2.polylines(image_frame, [polygon], True, (0, 255, 0), 5)
         rectangle = data.rect
-        cv2.putText(image_frame, decoded_text, (rectangle[0], rectangle[1] - 20), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2)
+        cv2.putText(image_frame, decoded_text, (rectangle[0], rectangle[1] - 20), 0, 0.9, (0, 255, 0), 2)
 
     # show image frame
     cv2.imshow("QR Generate", image_frame)

@@ -5,7 +5,6 @@ import datetime
 import subprocess
 import logging
 import requests
-import pymavlink.dialects.v20.all as dialect
 import settings
 import compat
 
@@ -1190,20 +1189,18 @@ class Vehicle(BaseVehicle):
 
     def __init__(self):
         super().__init__()
-        self.target = Target()
-        self.judge = Judge()
-        self.competition = Competition()
-        self.foe = Foe()
-        self.team = settings.credential_user_id
-        self.__connected = False
-        self.__speed = 0.0
-        self.__battery = 0.0
-        self.__auto = 0
-        self.__flight_mode = "UNKNOWN"
-        self.__armed = False
-        self.__thread_telemetry_get = threading.Thread(target=self.__telemetry_get).start()
-        self.__thread_telemetry_put = None
-        self.__server_connection = None
+        self._target = Target()
+        self._judge = Judge()
+        self._competition = Competition()
+        self._foe = Foe()
+        self._team = settings.credential_user_id
+        self._connected = False
+        self._speed = 0.0
+        self._battery = 0.0
+        self._auto = 0
+        self._flight_mode = "UNKNOWN"
+        self._armed = False
+        self._thread_telemetry_get = threading.Thread(target=self._telemetry_get).start()
 
     @property
     def speed(self):
@@ -1214,7 +1211,7 @@ class Vehicle(BaseVehicle):
         """
 
         # expose ground speed of the vehicle
-        return self.__speed
+        return self._speed
 
     @property
     def battery(self):
@@ -1225,7 +1222,7 @@ class Vehicle(BaseVehicle):
         """
 
         # expose battery level of the vehicle
-        return self.__battery
+        return self._battery
 
     @property
     def auto(self):
@@ -1236,7 +1233,7 @@ class Vehicle(BaseVehicle):
         """
 
         # expose vehicle is flying in auto mode or not
-        return self.__auto
+        return 1 if self.flight_mode in ("GUIDED", "AUTO") else 0
 
     @property
     def flight_mode(self):
@@ -1247,7 +1244,7 @@ class Vehicle(BaseVehicle):
         """
 
         # expose vehicle flight mode
-        return self.__flight_mode
+        return self._flight_mode
 
     @property
     def armed(self):
@@ -1258,7 +1255,7 @@ class Vehicle(BaseVehicle):
         """
 
         # expose vehicle arm status
-        return self.__armed
+        return self._armed
 
     @property
     def connected(self):
@@ -1269,10 +1266,10 @@ class Vehicle(BaseVehicle):
         """
 
         # expose connected to vehicle or not
-        return self.__connected
+        return self._connected
 
     @property
-    def __dict_judge_telemetry(self):
+    def dict_judge_telemetry(self):
         """
         get telemetry data ready for sending to the judge server
 
@@ -1280,7 +1277,7 @@ class Vehicle(BaseVehicle):
         """
 
         # expose telemetry data ready for sending to the judge server
-        return {compat.send["team"]["locale"]: self.team,
+        return {compat.send["team"]["locale"]: self._team,
                 compat.send["latitude"]["locale"]: self.location.latitude,
                 compat.send["longitude"]["locale"]: self.location.longitude,
                 compat.send["altitude"]["locale"]: self.location.altitude,
@@ -1290,11 +1287,11 @@ class Vehicle(BaseVehicle):
                 compat.send["speed"]["locale"]: self.speed,
                 compat.send["battery"]["locale"]: self.battery,
                 compat.send["auto"]["locale"]: self.auto,
-                compat.send["target_lock"]["locale"]: self.target.lock,
-                compat.send["target_x"]["locale"]: self.target.x,
-                compat.send["target_y"]["locale"]: self.target.y,
-                compat.send["target_width"]["locale"]: self.target.width,
-                compat.send["target_height"]["locale"]: self.target.height,
+                compat.send["target_lock"]["locale"]: self._target.lock,
+                compat.send["target_x"]["locale"]: self._target.x,
+                compat.send["target_y"]["locale"]: self._target.y,
+                compat.send["target_width"]["locale"]: self._target.width,
+                compat.send["target_height"]["locale"]: self._target.height,
                 compat.send["time"]["locale"]: {
                     compat.time["hour"]["locale"]: self.time.hour,
                     compat.time["minute"]["locale"]: self.time.minute,
@@ -1302,7 +1299,7 @@ class Vehicle(BaseVehicle):
                     compat.time["millisecond"]["locale"]: self.time.millisecond}}
 
     @property
-    def __dict_judge_lock(self):
+    def dict_judge_lock(self):
         """
         get target lock data ready for sending to the judge server
 
@@ -1312,17 +1309,15 @@ class Vehicle(BaseVehicle):
         # expose target lock data ready for sending to the judge server
         return {compat.lock["lock_auto"]["locale"]: self.auto,
                 compat.lock["lock_start"]["locale"]: {
-                    compat.time["hour"]["locale"]: self.target.time_start.hour,
-                    compat.time["minute"]["locale"]: self.target.time_start.minute,
-                    compat.time["second"]["locale"]: self.target.time_start.second,
-                    compat.time["millisecond"][
-                        "locale"]: self.target.time_start.millisecond},
+                    compat.time["hour"]["locale"]: self._target.time_start.hour,
+                    compat.time["minute"]["locale"]: self._target.time_start.minute,
+                    compat.time["second"]["locale"]: self._target.time_start.second,
+                    compat.time["millisecond"]["locale"]: self._target.time_start.millisecond},
                 compat.lock["lock_end"]["locale"]: {
-                    compat.time["hour"]["locale"]: self.target.time_end.hour,
-                    compat.time["minute"]["locale"]: self.target.time_end.minute,
-                    compat.time["second"]["locale"]: self.target.time_end.second,
-                    compat.time["millisecond"][
-                        "locale"]: self.target.time_end.millisecond}}
+                    compat.time["hour"]["locale"]: self._target.time_end.hour,
+                    compat.time["minute"]["locale"]: self._target.time_end.minute,
+                    compat.time["second"]["locale"]: self._target.time_end.second,
+                    compat.time["millisecond"]["locale"]: self._target.time_end.millisecond}}
 
     def __dict__(self):
         """
@@ -1336,11 +1331,11 @@ class Vehicle(BaseVehicle):
                 "time": self.time.__dict__(),
                 "location": self.location.__dict__(),
                 "attitude": self.attitude.__dict__(),
-                "target": self.target.__dict__(),
-                "judge": self.judge.__dict__(),
-                "competition": self.competition.__dict__(),
-                "foe": self.foe.__dict__(),
-                "team": self.team,
+                "target": self._target.__dict__(),
+                "judge": self._judge.__dict__(),
+                "competition": self._competition.__dict__(),
+                "foe": self._foe.__dict__(),
+                "team": self._team,
                 "speed": self.speed,
                 "battery": self.battery,
                 "auto": self.auto,
@@ -1365,7 +1360,7 @@ class Vehicle(BaseVehicle):
         """
 
         # call server login method from judge object
-        self.judge.server_login()
+        self._judge.server_login()
 
     def server_logout(self):
         """
@@ -1375,7 +1370,7 @@ class Vehicle(BaseVehicle):
         """
 
         # call server logout method from judge object
-        self.judge.server_logout()
+        self._judge.server_logout()
 
     def server_time_get(self):
         """
@@ -1385,7 +1380,7 @@ class Vehicle(BaseVehicle):
         """
 
         # call get server time method from judge object
-        self.judge.server_time_get()
+        self._judge.server_time_get()
 
     def wait_ready(self):
         """
@@ -1398,11 +1393,18 @@ class Vehicle(BaseVehicle):
             time.sleep(0.1)
 
     # telemetry receiver thread method
-    def __telemetry_get(self):
+    def _telemetry_get(self):
 
         # flight mode declarations
         flight_mode_names = list(compat.mode_mapping.keys())
         flight_mode_numbers = list(compat.mode_mapping.values())
+
+        # create a session for telemetry get
+        connection = requests.Session()
+
+        # create connection url
+        url = "http://{0}:{1}/get/all".format(settings.rest_server_ip,
+                                              settings.rest_server_port)
 
         # do below always
         while True:
@@ -1412,84 +1414,57 @@ class Vehicle(BaseVehicle):
 
             # try to receive vehicle state
             try:
-                vehicle_state = requests.get(url="http://{0}:{1}/get/all".format(settings.rest_server_ip,
-                                                                                 settings.rest_server_port)).json()
+                vehicle_state = connection.get(url=url).json()
             except requests.exceptions.ConnectionError:
                 vehicle_state = {}
 
             # not received a message
             if not vehicle_state:
-                self.__connected = False
+                self._connected = False
                 continue
-            self.__connected = True
+            self._connected = True
+
+            # get vehicle state keys for field checking
+            vehicle_state_keys = vehicle_state.keys()
 
             # get latitude, longitude, relative altitude and heading of the vehicle
-            self.location.latitude = vehicle_state["GLOBAL_POSITION_INT"]["lat"] * 1e-7
-            self.location.longitude = vehicle_state["GLOBAL_POSITION_INT"]["lon"] * 1e-7
-            self.location.altitude = vehicle_state["GLOBAL_POSITION_INT"]["relative_alt"] * 1e-3
-            self.attitude.heading = vehicle_state["GLOBAL_POSITION_INT"]["hdg"] * 1e-2
+            if "GLOBAL_POSITION_INT" in vehicle_state_keys:
+                self.location.latitude = vehicle_state["GLOBAL_POSITION_INT"]["lat"] * 1e-7
+                self.location.longitude = vehicle_state["GLOBAL_POSITION_INT"]["lon"] * 1e-7
+                self.location.altitude = vehicle_state["GLOBAL_POSITION_INT"]["relative_alt"] * 1e-3
+                self.attitude.heading = vehicle_state["GLOBAL_POSITION_INT"]["hdg"] * 1e-2
 
             # get roll and pitch of the vehicle
-            self.attitude.roll = math.degrees(vehicle_state["ATTITUDE"]["roll"])
-            self.attitude.pitch = math.degrees(vehicle_state["ATTITUDE"]["pitch"])
+            if "ATTITUDE" in vehicle_state_keys:
+                self.attitude.roll = math.degrees(vehicle_state["ATTITUDE"]["roll"])
+                self.attitude.pitch = math.degrees(vehicle_state["ATTITUDE"]["pitch"])
 
             # get ground speed of the vehicle
-            self.__speed = vehicle_state["VFR_HUD"]["groundspeed"]
+            if "VFR_HUD" in vehicle_state_keys:
+                self._speed = vehicle_state["VFR_HUD"]["groundspeed"]
 
             # get remaining battery percent of the vehicle
-            self.__battery = vehicle_state["SYS_STATUS"]["battery_remaining"]
+            if "SYS_STATUS" in vehicle_state_keys:
+                self._battery = vehicle_state["SYS_STATUS"]["battery_remaining"]
 
             # get system time of the vehicle
-            unix_time = vehicle_state["SYSTEM_TIME"]["time_unix_usec"]
-            unix_time = datetime.datetime.utcfromtimestamp(unix_time * 1e-6)
-            self.time.hour = unix_time.hour
-            self.time.minute = unix_time.minute
-            self.time.second = unix_time.second
-            self.time.millisecond = int(unix_time.microsecond * 1e-3)
+            if "SYSTEM_TIME" in vehicle_state_keys:
+                unix_time = vehicle_state["SYSTEM_TIME"]["time_unix_usec"]
+                unix_time = datetime.datetime.utcfromtimestamp(unix_time * 1e-6)
+                self.time.hour = unix_time.hour
+                self.time.minute = unix_time.minute
+                self.time.second = unix_time.second
+                self.time.millisecond = int(unix_time.microsecond * 1e-3)
 
-            # get flight mode of the vehicle
-            custom_mode = vehicle_state["HEARTBEAT"]["custom_mode"]
-            custom_mode_index = flight_mode_numbers.index(custom_mode)
-            self.__flight_mode = flight_mode_names[custom_mode_index]
+            # get heartbeat of the vehicle
+            if "HEARTBEAT" in vehicle_state_keys:
+                # get flight mode of the vehicle
+                custom_mode = vehicle_state["HEARTBEAT"]["custom_mode"]
+                custom_mode_index = flight_mode_numbers.index(custom_mode)
+                self._flight_mode = flight_mode_names[custom_mode_index]
 
-            # set automatic flight attribute
-            if self.flight_mode in ("GUIDED", "AUTO"):
-                self.__auto = 1
-            else:
-                self.__auto = 0
-
-            # get arm status
-            base_mode = vehicle_state["HEARTBEAT"]["base_mode"]
-            armed_bit = base_mode & dialect.MAV_MODE_FLAG_SAFETY_ARMED
-            arm_status = armed_bit == dialect.MAV_MODE_FLAG_SAFETY_ARMED
-            self.__armed = arm_status
-
-    # telemetry sender thread method
-    def __telemetry_put(self):
-
-        # never connected to server before
-        if self.__server_connection is None:
-            # create a session
-            self.__server_connection = requests.Session()
-
-        # create server url
-        url = "http://{0}:{1}/telemetry_post".format(settings.rest_server_ip,
-                                                     settings.rest_server_port)
-
-        # do below always
-        while True:
-
-            # put telemetry data to api
-            try:
-
-                # put telemetry data to api
-                self.__server_connection.post(url=url,
-                                              headers={"Content-Type": "application/json"},
-                                              json=self.__dict__())
-
-            # catch all exceptions
-            except Exception as e:
-                pass
-
-            # cool down the put
-            time.sleep(0.2)
+                # get arm status
+                base_mode = vehicle_state["HEARTBEAT"]["base_mode"]
+                armed_bit = base_mode & 128
+                arm_status = armed_bit == 128
+                self._armed = arm_status

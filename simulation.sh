@@ -9,6 +9,7 @@ cd logs/ || exit 1
 cd "$HOME"/test-ucusu/fighter-uav/plane-follow/ || exit 1
 /usr/bin/bash plane_follow_start.sh
 
+# wait for vehicles to be fully deployed
 until ! screen -list | grep -q "plane_follow_deploy"; do
   sleep 1
 done
