@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# initial configurations
+TOTAL_VEHICLE_COUNT=5
+
 # get inside the log directory
 cd "$HOME"/test-ucusu/fighter-uav/ || exit 1
 mkdir -p logs/
@@ -14,9 +17,11 @@ until ! screen -list | grep -q "plane_follow_deploy"; do
   sleep 1
 done
 
-# start rest server
+# start rest servers
 cd "$HOME"/test-ucusu/mav-rest/ || exit 1
-screen -S mav-rest -d -m bash -c "/usr/bin/python3 mav-rest.py --host=127.0.0.1 --port=8000 --master=127.0.0.1:10010"
+for i in $(seq 1 $TOTAL_VEHICLE_COUNT); do
+  screen -S mav-rest-$((i)) -d -m bash -c "/usr/bin/python3 mav-rest.py --host=127.0.0.1 --port=$((8000 + i * 10)) --master=udpin:127.0.0.1:$((10000 + i * 10))"
+done
 
 # start judge server
 cd "$HOME"/test-ucusu/fighter-judge/ || exit 1

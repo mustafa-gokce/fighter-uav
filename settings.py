@@ -28,7 +28,7 @@ telem_stream_port_interop = 10030
 
 # settings for local server
 rest_server_ip = "127.0.0.1"
-rest_server_port = 8000
+rest_server_port = 8010
 rest_server_delay = 0.1
 
 # settings for judge server
