@@ -754,10 +754,13 @@ class Credential:
     credential class
     """
 
-    def __init__(self, user_name=settings.credential_user_name,
-                 user_password=settings.credential_user_password):
-        self._user_name = user_name
-        self._user_password = user_password
+    def __init__(self,
+                 user_name=settings.credential_user_name,
+                 user_password=settings.credential_user_password,
+                 user_number=settings.credential_user_id):
+        self.user_name = user_name
+        self.user_password = user_password
+        self.user_number = user_number
 
     @property
     def user_name(self):
@@ -780,6 +783,17 @@ class Credential:
 
         # expose user password attribute
         return self._user_password
+
+    @property
+    def user_number(self):
+        """
+        get user number
+
+        :return: int
+        """
+
+        # expose user number attribute
+        return self._user_number
 
     @user_name.setter
     def user_name(self, user_name: str):
@@ -820,6 +834,22 @@ class Credential:
 
         # set user password attribute
         self._user_password = user_password
+
+    @user_number.setter
+    def user_number(self, user_number: str):
+        """
+        set user number
+
+        :param user_number: int
+        :return: None
+        """
+
+        # user number can be integer
+        if type(user_number) != int:
+            raise TypeError
+
+        # set user number attribute
+        self._user_number = user_number
 
     @property
     def dict_credential_judge(self):
@@ -936,7 +966,7 @@ class Judge:
     """
 
     def __init__(self):
-        self.credential = Credential()
+        self._credential = Credential()
         self._time = Time()
         self._path_login = compat.path_server_login
         self._path_logout = compat.path_server_logout
@@ -947,7 +977,6 @@ class Judge:
         self._interop_enabled = False
         self._foes = []
         self._server_connection = None
-        self._server_connection_thread = None
 
     @property
     def time(self):
@@ -1093,7 +1122,7 @@ class Judge:
                     # request to log in to judge server
                     login_response = self._server_connection.post(url=self.path_login,
                                                                   headers={"Content-Type": "application/json"},
-                                                                  json=self.credential.dict_credential_judge)
+                                                                  json=self._credential.dict_credential_judge)
 
                     # check login request status
                     if login_response.status_code == 200:
@@ -1150,30 +1179,82 @@ class Judge:
 
         :return: None
         """
-        # check if interop is enabled
-        if self.interop_enabled:
 
-            # check login status
-            if self.logged_in:
+        # check if interop is enabled and logged in to judge server
+        if self.interop_enabled and self.logged_in:
 
-                # try to get server time from the judge server
-                try:
+            # try to get server time from the judge server
+            try:
 
-                    # request system time from judge server
-                    server_time_response = self._server_connection.get(url=self.path_time)
+                # request system time from judge server
+                server_time_response = self._server_connection.get(url=self.path_time)
 
-                    # parse the request system time response
-                    server_time_response_data = server_time_response.json()
+                # parse the request system time response
+                server_time_response_data = server_time_response.json()
 
-                    # update time attributes
-                    if server_time_response.status_code == 200:
-                        self.time.hour = int(server_time_response_data[compat.time["hour"]["locale"]])
-                        self.time.minute = int(server_time_response_data[compat.time["minute"]["locale"]])
-                        self.time.second = int(server_time_response_data[compat.time["second"]["locale"]])
-                        self.time.millisecond = int(server_time_response_data[compat.time["millisecond"]["locale"]])
+                # update time attributes
+                if server_time_response.status_code == 200:
+                    self.time.hour = int(server_time_response_data[compat.time["hour"]["locale"]])
+                    self.time.minute = int(server_time_response_data[compat.time["minute"]["locale"]])
+                    self.time.second = int(server_time_response_data[compat.time["second"]["locale"]])
+                    self.time.millisecond = int(server_time_response_data[compat.time["millisecond"]["locale"]])
 
-                # catch all exceptions
-                except Exception as e:
+            # catch all exceptions
+            except Exception as e:
+                pass
+
+    # communicate with judge server
+    def server_interop(self, data=None):
+
+        # initialize received interoperability data
+        received_interop_data = {}
+
+        # check if interop is enabled and logged in to judge server
+        if self.interop_enabled and self.logged_in and data:
+
+            # try to interop with the judge server
+            try:
+
+                # send and receive interoperability data
+                server_interop_response = self._server_connection.post(url=self.path_send,
+                                                                       headers={"Content-Type": "application/json"},
+                                                                       json=data)
+
+                # parse the received interoperability data
+                server_interop_response_data = server_interop_response.json()
+
+                # check if response is valid
+                if server_interop_response.status_code == 200:
+                    # update interoperability data
+                    received_interop_data = server_interop_response_data
+
+                    # update judge data
+                    self._update(data=received_interop_data)
+
+            # catch all exceptions
+            except Exception as e:
+                pass
+
+        # return to received interoperability data
+        return received_interop_data
+
+    # update judge class attributes
+    def _update(self, data=None):
+
+        # primitive data sanity check
+        if data and isinstance(data, dict):
+
+            # update the judge server time
+            data_time = data[compat.receive["time"]["locale"]]
+            self.time.hour = data_time[compat.time["hour"]["locale"]]
+            self.time.minute = data_time[compat.time["minute"]["locale"]]
+            self.time.second = data_time[compat.time["second"]["locale"]]
+            self.time.millisecond = data_time[compat.time["millisecond"]["locale"]]
+
+            # update the foe vehicles
+            data_teams = data[compat.receive["team"]["locale"]]
+            for data_team in data_teams:
+                if data_team[compat.team["team"]["locale"]] != self._credential.user_number:
                     pass
 
     def __dict__(self):
@@ -1225,6 +1306,7 @@ class Vehicle(BaseVehicle):
         self._flight_mode = "UNKNOWN"
         self._armed = False
         self._thread_telemetry_get = threading.Thread(target=self._telemetry_get).start()
+        self._thread_telemetry_put = threading.Thread(target=self._telemetry_put).start()
 
     @property
     def speed(self):
@@ -1462,3 +1544,13 @@ class Vehicle(BaseVehicle):
                 armed_bit = base_mode & 128
                 arm_status = armed_bit == 128
                 self._armed = arm_status
+
+    def _telemetry_put(self):
+
+        # do below always
+        while True:
+            # post vehicular telemetry data to judge server and get judge data
+            server_interop_data = self.judge.server_interop(data=self.dict_judge_telemetry)
+
+            # cool down the process
+            time.sleep(settings.judge_server_delay)

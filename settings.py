@@ -34,6 +34,7 @@ rest_server_delay = 0.1
 # settings for judge server
 judge_server_ip = "0.0.0.0"
 judge_server_port = 5000
+judge_server_delay = 1
 
 # settings for credentials
 credential_user_id = 26
