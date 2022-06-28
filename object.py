@@ -19,8 +19,8 @@ class DevOps:
     """
 
     def __init__(self):
-        self.__git_hash_long = subprocess.check_output(["git", "rev-parse", "HEAD"]).decode("ascii").strip()
-        self.__git_hash_short = subprocess.check_output(["git", "rev-parse", "--short", "HEAD"]).decode("ascii").strip()
+        self._git_hash_long = subprocess.check_output(["git", "rev-parse", "HEAD"]).decode("ascii").strip()
+        self._git_hash_short = subprocess.check_output(["git", "rev-parse", "--short", "HEAD"]).decode("ascii").strip()
 
     @property
     def git_hash_long(self):
@@ -31,7 +31,7 @@ class DevOps:
         """
 
         # return to long hash
-        return self.__git_hash_long
+        return self._git_hash_long
 
     @property
     def git_hash_short(self):
@@ -42,7 +42,7 @@ class DevOps:
         """
 
         # return to short has
-        return self.__git_hash_short
+        return self._git_hash_short
 
 
 class Competition:
@@ -51,8 +51,8 @@ class Competition:
     """
 
     def __init__(self):
-        self.__day = settings.competition_day
-        self.__round = settings.competition_round
+        self._day = settings.competition_day
+        self._round = settings.competition_round
 
     @property
     def day(self):
@@ -63,7 +63,7 @@ class Competition:
         """
 
         # return to competition day
-        return self.__day
+        return self._day
 
     @property
     def day_name(self):
@@ -85,7 +85,7 @@ class Competition:
         """
 
         # return to local round
-        return self.__round
+        return self._round
 
     @property
     def round_local_name(self):
@@ -152,10 +152,10 @@ class Time:
     """
 
     def __init__(self):
-        self.__hour = 0
-        self.__minute = 0
-        self.__second = 0
-        self.__millisecond = 0
+        self._hour = 0
+        self._minute = 0
+        self._second = 0
+        self._millisecond = 0
 
     @property
     def hour(self):
@@ -166,7 +166,7 @@ class Time:
         """
 
         # expose hour attribute
-        return self.__hour
+        return self._hour
 
     @property
     def minute(self):
@@ -177,7 +177,7 @@ class Time:
         """
 
         # expose minute attribute
-        return self.__minute
+        return self._minute
 
     @property
     def second(self):
@@ -188,7 +188,7 @@ class Time:
         """
 
         # expose second attribute
-        return self.__second
+        return self._second
 
     @property
     def millisecond(self):
@@ -199,7 +199,7 @@ class Time:
         """
 
         # expose millisecond attribute
-        return self.__millisecond
+        return self._millisecond
 
     @hour.setter
     def hour(self, hour: int):
@@ -219,7 +219,7 @@ class Time:
             raise ValueError
 
         # set hour attribute
-        self.__hour = int(hour)
+        self._hour = int(hour)
 
     @minute.setter
     def minute(self, minute: int):
@@ -239,7 +239,7 @@ class Time:
             raise ValueError
 
         # set minute attribute
-        self.__minute = int(minute)
+        self._minute = int(minute)
 
     @second.setter
     def second(self, second: int):
@@ -259,7 +259,7 @@ class Time:
             raise ValueError
 
         # set second attribute
-        self.__second = int(second)
+        self._second = int(second)
 
     @millisecond.setter
     def millisecond(self, millisecond: int):
@@ -279,7 +279,7 @@ class Time:
             raise ValueError
 
         # set second attribute
-        self.__millisecond = int(millisecond)
+        self._millisecond = int(millisecond)
 
     def __dict__(self):
         """
@@ -311,9 +311,9 @@ class Location:
     """
 
     def __init__(self):
-        self.__latitude = 0.0
-        self.__longitude = 0.0
-        self.__altitude = 0.0
+        self._latitude = 0.0
+        self._longitude = 0.0
+        self._altitude = 0.0
 
     @property
     def latitude(self):
@@ -324,7 +324,7 @@ class Location:
         """
 
         # expose latitude attribute
-        return self.__latitude
+        return self._latitude
 
     @property
     def longitude(self):
@@ -335,7 +335,7 @@ class Location:
         """
 
         # expose longitude attribute
-        return self.__longitude
+        return self._longitude
 
     @property
     def altitude(self):
@@ -346,7 +346,7 @@ class Location:
         """
 
         # expose altitude attribute
-        return self.__altitude
+        return self._altitude
 
     @latitude.setter
     def latitude(self, latitude: float):
@@ -366,7 +366,7 @@ class Location:
             raise ValueError
 
         # set latitude attribute
-        self.__latitude = float(latitude)
+        self._latitude = float(latitude)
 
     @longitude.setter
     def longitude(self, longitude: float):
@@ -386,7 +386,7 @@ class Location:
             raise ValueError
 
         # set longitude attribute
-        self.__longitude = float(longitude)
+        self._longitude = float(longitude)
 
     @altitude.setter
     def altitude(self, altitude: float):
@@ -402,7 +402,7 @@ class Location:
             raise TypeError
 
         # set altitude attribute
-        self.__altitude = float(altitude)
+        self._altitude = float(altitude)
 
     def __dict__(self):
         """
@@ -433,9 +433,9 @@ class Attitude:
     """
 
     def __init__(self):
-        self.__roll = 0.0
-        self.__pitch = 0.0
-        self.__heading = 0.0
+        self._roll = 0.0
+        self._pitch = 0.0
+        self._heading = 0.0
 
     @property
     def roll(self):
@@ -446,7 +446,7 @@ class Attitude:
         """
 
         # expose roll angle attribute
-        return self.__roll
+        return self._roll
 
     @property
     def pitch(self):
@@ -457,7 +457,7 @@ class Attitude:
         """
 
         # expose pitch angle attribute
-        return self.__pitch
+        return self._pitch
 
     @property
     def heading(self):
@@ -468,7 +468,7 @@ class Attitude:
         """
 
         # expose heading attribute
-        return self.__heading
+        return self._heading
 
     @roll.setter
     def roll(self, roll: float):
@@ -488,7 +488,7 @@ class Attitude:
             raise ValueError
 
         # set roll attribute
-        self.__roll = float(roll)
+        self._roll = float(roll)
 
     @pitch.setter
     def pitch(self, pitch: float):
@@ -508,7 +508,7 @@ class Attitude:
             raise ValueError
 
         # set pitch attribute
-        self.__pitch = float(pitch)
+        self._pitch = float(pitch)
 
     @heading.setter
     def heading(self, heading: float):
@@ -528,7 +528,7 @@ class Attitude:
             raise ValueError
 
         # set heading attribute
-        self.__heading = float(heading)
+        self._heading = float(heading)
 
     def __dict__(self):
         """
@@ -561,11 +561,11 @@ class Target:
     def __init__(self):
         self.time_start = Time()
         self.time_end = Time()
-        self.__lock = 0
-        self.__x = 0
-        self.__y = 0
-        self.__width = 0
-        self.__height = 0
+        self._lock = 0
+        self._x = 0
+        self._y = 0
+        self._width = 0
+        self._height = 0
 
     @property
     def lock(self):
@@ -576,7 +576,7 @@ class Target:
         """
 
         # expose target is locked attribute
-        return self.__lock
+        return self._lock
 
     @property
     def x(self):
@@ -587,7 +587,7 @@ class Target:
         """
 
         # expose target upper left pixel x value on image frame
-        return self.__x
+        return self._x
 
     @property
     def y(self):
@@ -598,7 +598,7 @@ class Target:
         """
 
         # expose target upper left pixel y value on image frame
-        return self.__y
+        return self._y
 
     @property
     def width(self):
@@ -609,7 +609,7 @@ class Target:
         """
 
         # expose target width on image frame
-        return self.__width
+        return self._width
 
     @property
     def height(self):
@@ -620,7 +620,7 @@ class Target:
         """
 
         # expose target height on image frame
-        return self.__height
+        return self._height
 
     @lock.setter
     def lock(self, lock: int):
@@ -640,7 +640,7 @@ class Target:
             raise ValueError
 
         # set lock attribute
-        self.__lock = lock
+        self._lock = lock
 
     @x.setter
     def x(self, x: int):
@@ -660,7 +660,7 @@ class Target:
             raise ValueError
 
         # set x attribute
-        self.__x = x
+        self._x = x
 
     @y.setter
     def y(self, y: int):
@@ -680,7 +680,7 @@ class Target:
             raise ValueError
 
         # set y attribute
-        self.__y = y
+        self._y = y
 
     @width.setter
     def width(self, width: int):
@@ -700,7 +700,7 @@ class Target:
             raise ValueError
 
         # set width attribute
-        self.__width = width
+        self._width = width
 
     @height.setter
     def height(self, height: int):
@@ -720,7 +720,7 @@ class Target:
             raise ValueError
 
         # set height attribute
-        self.__height = height
+        self._height = height
 
     def __dict__(self):
         """
@@ -756,8 +756,8 @@ class Credential:
 
     def __init__(self, user_name=settings.credential_user_name,
                  user_password=settings.credential_user_password):
-        self.__user_name = user_name
-        self.__user_password = user_password
+        self._user_name = user_name
+        self._user_password = user_password
 
     @property
     def user_name(self):
@@ -768,7 +768,7 @@ class Credential:
         """
 
         # expose user name attribute
-        return self.__user_name
+        return self._user_name
 
     @property
     def user_password(self):
@@ -779,7 +779,7 @@ class Credential:
         """
 
         # expose user password attribute
-        return self.__user_password
+        return self._user_password
 
     @user_name.setter
     def user_name(self, user_name: str):
@@ -799,7 +799,7 @@ class Credential:
             raise ValueError
 
         # set user name attribute
-        self.__user_name = user_name
+        self._user_name = user_name
 
     @user_password.setter
     def user_password(self, user_password: str):
@@ -819,7 +819,7 @@ class Credential:
             raise ValueError
 
         # set user password attribute
-        self.__user_password = user_password
+        self._user_password = user_password
 
     @property
     def dict_credential_judge(self):
@@ -864,7 +864,7 @@ class BaseVehicle:
         self.time = Time()
         self.location = Location()
         self.attitude = Attitude()
-        self.__team = 0
+        self._team = 0
 
     @property
     def team(self):
@@ -875,7 +875,7 @@ class BaseVehicle:
         """
 
         # expose team number of the vehicle
-        return self.__team
+        return self._team
 
     @team.setter
     def team(self, team: int):
@@ -895,7 +895,7 @@ class BaseVehicle:
             raise ValueError
 
         # set team number attribute
-        self.__team = team
+        self._team = team
 
     def __dict__(self):
         """
@@ -1163,13 +1163,14 @@ class Judge:
                     server_time_response = self._server_connection.get(url=self.path_time)
 
                     # parse the request system time response
-                    server_time_response = server_time_response.json()
+                    server_time_response_data = server_time_response.json()
 
                     # update time attributes
-                    self.time.hour = int(server_time_response[compat.time["hour"]["locale"]])
-                    self.time.minute = int(server_time_response[compat.time["minute"]["locale"]])
-                    self.time.second = int(server_time_response[compat.time["second"]["locale"]])
-                    self.time.millisecond = int(server_time_response[compat.time["millisecond"]["locale"]])
+                    if server_time_response.status_code == 200:
+                        self.time.hour = int(server_time_response_data[compat.time["hour"]["locale"]])
+                        self.time.minute = int(server_time_response_data[compat.time["minute"]["locale"]])
+                        self.time.second = int(server_time_response_data[compat.time["second"]["locale"]])
+                        self.time.millisecond = int(server_time_response_data[compat.time["millisecond"]["locale"]])
 
                 # catch all exceptions
                 except Exception as e:

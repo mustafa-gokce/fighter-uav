@@ -40,5 +40,8 @@ vehicle.judge.server_login()
 # log the login status to judge server
 logger.info("vehicle judge server login status: " + str(vehicle.judge.logged_in))
 
-# dump vehicular data
-logger.info(vehicle.__dict__())
+# get time from judge server
+vehicle.judge.server_time_get()
+
+# log time from judge server
+logger.info("judge server time: " + str(vehicle.judge.time))
