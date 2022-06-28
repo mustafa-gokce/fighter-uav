@@ -1244,18 +1244,37 @@ class Judge:
         # primitive data sanity check
         if data and isinstance(data, dict):
 
-            # update the judge server time
-            data_time = data[compat.receive["time"]["locale"]]
-            self.time.hour = data_time[compat.time["hour"]["locale"]]
-            self.time.minute = data_time[compat.time["minute"]["locale"]]
-            self.time.second = data_time[compat.time["second"]["locale"]]
-            self.time.millisecond = data_time[compat.time["millisecond"]["locale"]]
+            # try to update judge class attributes
+            try:
 
-            # update the foe vehicles
-            data_teams = data[compat.receive["team"]["locale"]]
-            for data_team in data_teams:
-                if data_team[compat.team["team"]["locale"]] != self._credential.user_number:
-                    pass
+                # update the judge server time
+                data_time = data[compat.receive["time"]["locale"]]
+                self.time.hour = data_time[compat.time["hour"]["locale"]]
+                self.time.minute = data_time[compat.time["minute"]["locale"]]
+                self.time.second = data_time[compat.time["second"]["locale"]]
+                self.time.millisecond = data_time[compat.time["millisecond"]["locale"]]
+
+                # update the foe vehicles
+                data_teams = data[compat.receive["team"]["locale"]]
+                for data_team in data_teams:
+                    foe = Foe()
+                    foe.team = data_team[compat.team["team"]["locale"]]
+                    if foe.team != self._credential.user_number:
+                        foe.location.latitude = data_team[compat.team["latitude"]["locale"]]
+                        foe.location.longitude = data_team[compat.team["longitude"]["locale"]]
+                        foe.location.altitude = data_team[compat.team["altitude"]["locale"]]
+                        foe.attitude.roll = data_team[compat.team["roll"]["locale"]]
+                        foe.attitude.pitch = data_team[compat.team["pitch"]["locale"]]
+                        foe.attitude.heading = data_team[compat.team["heading"]["locale"]]
+                        index = next((i for i, item in enumerate(self.foes) if item.team == foe.team), None)
+                        if index:
+                            self.foes[index] = foe
+                        else:
+                            self.foes.append(foe)
+
+            # catch all exceptions
+            except Exception as e:
+                pass
 
     def __dict__(self):
         """
