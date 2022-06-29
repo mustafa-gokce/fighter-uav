@@ -156,6 +156,7 @@ class Time:
         self._minute = 0
         self._second = 0
         self._millisecond = 0
+        self._latency = 0.0
 
     @property
     def hour(self):
@@ -201,6 +202,17 @@ class Time:
         # expose millisecond attribute
         return self._millisecond
 
+    @property
+    def latency(self):
+        """
+        get latency
+
+        :return: int
+        """
+
+        # expose latency attribute
+        return self._latency
+
     @hour.setter
     def hour(self, hour: int):
         """
@@ -210,8 +222,8 @@ class Time:
         :return: None
         """
 
-        # hour can be int or float
-        if type(hour) not in (int, float):
+        # hour can be int
+        if not isinstance(hour, int):
             raise TypeError
 
         # hour should be a reasonable number
@@ -219,7 +231,7 @@ class Time:
             raise ValueError
 
         # set hour attribute
-        self._hour = int(hour)
+        self._hour = hour
 
     @minute.setter
     def minute(self, minute: int):
@@ -230,8 +242,8 @@ class Time:
         :return: None
         """
 
-        # minute can be int or float
-        if type(minute) not in (int, float):
+        # minute can be int
+        if not isinstance(minute, int):
             raise TypeError
 
         # minute should be a reasonable number
@@ -239,7 +251,7 @@ class Time:
             raise ValueError
 
         # set minute attribute
-        self._minute = int(minute)
+        self._minute = minute
 
     @second.setter
     def second(self, second: int):
@@ -250,8 +262,8 @@ class Time:
         :return: None
         """
 
-        # second can be int or float
-        if type(second) not in (int, float):
+        # second can be int
+        if not isinstance(second, int):
             raise TypeError
 
         # second should be a reasonable number
@@ -259,7 +271,7 @@ class Time:
             raise ValueError
 
         # set second attribute
-        self._second = int(second)
+        self._second = second
 
     @millisecond.setter
     def millisecond(self, millisecond: int):
@@ -270,16 +282,32 @@ class Time:
         :return: None
         """
 
-        # millisecond can be int or float
-        if type(millisecond) not in (int, float):
+        # millisecond can be int
+        if not isinstance(millisecond, int):
             raise TypeError
 
         # millisecond should be a reasonable number
         if not 0 <= millisecond < 1000:
             raise ValueError
 
-        # set second attribute
-        self._millisecond = int(millisecond)
+        # set millisecond attribute
+        self._millisecond = millisecond
+
+    @latency.setter
+    def latency(self, latency: int):
+        """
+        set latency
+
+        :param latency: int
+        :return: None
+        """
+
+        # latency can be int
+        if not isinstance(latency, int):
+            raise TypeError
+
+        # set latency attribute
+        self._latency = latency
 
     def __dict__(self):
         """
@@ -804,15 +832,15 @@ class Credential:
         :return: None
         """
 
-        # user name can be string
+        # username can be string
         if type(user_name) != str:
             raise TypeError
 
-        # user name can not be empty
+        # username can not be empty
         if user_name == "":
             raise ValueError
 
-        # set user name attribute
+        # set username attribute
         self._user_name = user_name
 
     @user_password.setter
@@ -1259,6 +1287,7 @@ class Judge:
                 for data_team in data_teams:
                     foe = Foe()
                     foe.team = data_team[compat.team["team"]["locale"]]
+                    foe.time.latency = data_team[compat.team["time"]["locale"]]
                     if foe.team != self._credential.user_number:
                         foe.location.latitude = data_team[compat.team["latitude"]["locale"]]
                         foe.location.longitude = data_team[compat.team["longitude"]["locale"]]
@@ -1271,6 +1300,8 @@ class Judge:
                             self.foes[index] = foe
                         else:
                             self.foes.append(foe)
+                    else:
+                        self.time.latency = data_team[compat.team["time"]["locale"]]
 
             # catch all exceptions
             except Exception as e:
