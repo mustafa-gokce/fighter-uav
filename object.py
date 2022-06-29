@@ -320,7 +320,8 @@ class Time:
         return {"hour": self.hour,
                 "minute": self.minute,
                 "second": self.second,
-                "millisecond": self.millisecond}
+                "millisecond": self.millisecond,
+                "latency": self.latency}
 
     def __str__(self):
         """
