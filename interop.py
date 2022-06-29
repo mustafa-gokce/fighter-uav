@@ -1,3 +1,4 @@
+import time
 import logger
 import object
 
@@ -45,3 +46,14 @@ vehicle.judge.server_time_get()
 
 # log time from judge server
 logger.info("judge server time: " + str(vehicle.judge.time))
+
+# do below always
+while True:
+
+    # for each foe
+    for foe in vehicle.judge.foes:
+        # log the foes
+        logger.info("foes in judge server: " + str(foe))
+
+    # cool down the process
+    time.sleep(1)

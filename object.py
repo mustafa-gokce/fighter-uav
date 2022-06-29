@@ -1286,23 +1286,21 @@ class Judge:
                 # update the foe vehicles
                 data_teams = data[compat.receive["team"]["locale"]]
                 for data_team in data_teams:
-                    foe = Foe()
-                    foe.team = data_team[compat.team["team"]["locale"]]
-                    foe.time.latency = data_team[compat.team["time"]["locale"]]
-                    if foe.team != self._credential.user_number:
-                        foe.location.latitude = data_team[compat.team["latitude"]["locale"]]
-                        foe.location.longitude = data_team[compat.team["longitude"]["locale"]]
-                        foe.location.altitude = data_team[compat.team["altitude"]["locale"]]
-                        foe.attitude.roll = data_team[compat.team["roll"]["locale"]]
-                        foe.attitude.pitch = data_team[compat.team["pitch"]["locale"]]
-                        foe.attitude.heading = data_team[compat.team["heading"]["locale"]]
-                        index = next((i for i, item in enumerate(self.foes) if item.team == foe.team), None)
-                        if index:
-                            self.foes[index] = foe
-                        else:
-                            self.foes.append(foe)
-                    else:
-                        self.time.latency = data_team[compat.team["time"]["locale"]]
+                    index = next((i for i, item in enumerate(self.foes) if
+                                  item.team == data_team[compat.team["team"]["locale"]] and
+                                  item.team != self._credential.user_number), None)
+                    if index is None:
+                        self.foes.append(Foe())
+                        index = -1
+                    self.foes[index].team = data_team[compat.team["team"]["locale"]]
+                    self.foes[index].time.latency = data_team[compat.team["time"]["locale"]]
+                    self.foes[index].location.latitude = data_team[compat.team["latitude"]["locale"]]
+                    self.foes[index].location.longitude = data_team[compat.team["longitude"]["locale"]]
+                    self.foes[index].location.altitude = data_team[compat.team["altitude"]["locale"]]
+                    self.foes[index].attitude.roll = data_team[compat.team["roll"]["locale"]]
+                    self.foes[index].attitude.pitch = data_team[compat.team["pitch"]["locale"]]
+                    self.foes[index].attitude.heading = data_team[compat.team["heading"]["locale"]]
+                    # TODO: update battery too
 
             # catch all exceptions
             except Exception as e:
